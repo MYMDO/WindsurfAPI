@@ -20,7 +20,6 @@ import {
   normalizeMessagesForCascade, ToolCallStreamParser, parseToolCallsFromText,
 } from './tool-emulation.js';
 import { sanitizeText, PathSanitizeStream } from '../sanitize.js';
-import { isExperimentalEnabled } from '../runtime-config.js';
 
 const HEARTBEAT_MS = 15_000;
 const QUEUE_RETRY_MS = 1_000;
