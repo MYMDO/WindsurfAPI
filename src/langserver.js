@@ -9,6 +9,7 @@
  */
 
 import { spawn, execSync } from 'child_process';
+import { existsSync } from 'fs';
 import http2 from 'http2';
 import net from 'net';
 import { log } from './config.js';
@@ -113,6 +114,15 @@ export async function ensureLs(proxy = null) {
     env.HTTP_PROXY = pUrl;
     env.https_proxy = pUrl;
     env.http_proxy = pUrl;
+  }
+
+  // One-shot readable warning when the LS binary is missing — the generic
+  // ENOENT from spawn leaves users guessing which file is expected.
+  if (!existsSync(_binaryPath)) {
+    log.error(
+      `Language server binary not found at ${_binaryPath}. ` +
+      `Install it with:  bash install-ls.sh  (or set LS_BINARY_PATH env var)`
+    );
   }
 
   log.info(`Starting LS instance key=${key} port=${port} proxy=${pUrl || 'none'}`);

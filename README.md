@@ -109,10 +109,14 @@ cd ~/WindsurfAPI && bash update.sh
 git clone https://github.com/dwgx/WindsurfAPI.git
 cd WindsurfAPI
 
-# Language Server 二进制放到这里
+# Language Server 二进制 —— 一键下载 + chmod（从 Exafunction/codeium releases）
 mkdir -p /opt/windsurf/data/db
-cp language_server_linux_x64 /opt/windsurf/
-chmod +x /opt/windsurf/language_server_linux_x64
+bash install-ls.sh
+
+# 如果想用本地已下好的 binary：
+#   bash install-ls.sh /path/to/language_server_linux_x64
+# 或者指定 URL：
+#   bash install-ls.sh --url https://example.com/language_server_linux_x64
 
 cat > .env << 'EOF'
 PORT=3003
