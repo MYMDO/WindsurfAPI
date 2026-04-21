@@ -59,7 +59,7 @@
 
 import { randomUUID } from 'crypto';
 import {
-  writeVarintField, writeStringField, writeBytesField, writeMessageField,
+  writeVarintField, writeStringField, writeMessageField, writeBytesField,
   writeBoolField, parseFields, getField, getAllFields,
 } from './proto.js';
 
@@ -312,9 +312,8 @@ export function buildSendCascadeMessageRequest(apiKey, cascadeId, text, modelEnu
   // Field 6: images — repeated ImageData { base64_data=1, mime_type=2 }
   if (images?.length) {
     for (const img of images) {
-      const rawBytes = Buffer.from(img.base64_data, 'base64');
       const imgMsg = Buffer.concat([
-        writeBytesField(1, rawBytes),
+        writeStringField(1, img.base64_data),
         writeStringField(2, img.mime_type || 'image/png'),
       ]);
       parts.push(writeMessageField(6, imgMsg));
