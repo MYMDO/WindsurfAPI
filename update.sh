@@ -10,13 +10,23 @@ NAME="${PM2_NAME:-windsurf-api}"
 echo "=== [1/4] Pull latest ==="
 git fetch --quiet origin
 BEFORE=$(git rev-parse HEAD)
-git pull --ff-only
+REMOTE=$(git rev-parse origin/master)
+
+# Prefer fast-forward; fall back to hard reset if history was rewritten.
+# .env / accounts.json / logs / runtime-config.json are all gitignored,
+# so reset --hard only discards tracked-file local edits (which the update
+# workflow assumes there are none of).
+if ! git pull --ff-only --quiet 2>/dev/null; then
+  echo "    ! remote history rewritten — hard-resetting to origin/master"
+  git reset --hard "$REMOTE"
+fi
+
 AFTER=$(git rev-parse HEAD)
 if [ "$BEFORE" = "$AFTER" ]; then
   echo "    已是最新 / Already up to date"
 else
   echo "    $BEFORE → $AFTER"
-  git log --oneline "$BEFORE..$AFTER" | head -10
+  git log --oneline "$BEFORE..$AFTER" 2>/dev/null | head -10 || true
 fi
 
 echo ""
