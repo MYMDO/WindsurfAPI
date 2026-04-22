@@ -544,6 +544,59 @@ export async function handleDashboardApi(method, subpath, body, req, res) {
     }
   }
 
+  // ─── Batch proxy + account import ─────────────────────
+  // POST /batch-import — each line: "proxy email password" or "email password"
+  if (subpath === '/batch-import' && method === 'POST') {
+    try {
+      const { text, autoAdd = true } = body || {};
+      if (!text || typeof text !== 'string') return json(res, 400, { error: '缺少 text 字段' });
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return json(res, 400, { error: '没有有效行' });
+
+      const results = [];
+      for (const line of lines) {
+        const parts = line.split(/\s+/);
+        let proxy = null, email, password;
+        if (parts.length >= 3 && (parts[0].includes('://') || parts[0].includes(':'))) {
+          proxy = parts[0];
+          email = parts[1];
+          password = parts[2];
+        } else if (parts.length >= 2) {
+          email = parts[0];
+          password = parts[1];
+        } else {
+          results.push({ success: false, email: line.slice(0, 30), error: '格式错误 需要 [proxy] email password' });
+          continue;
+        }
+        try {
+          const loginProxy = proxy ? { host: proxy } : getProxyConfig().global;
+          const result = await processWindsurfLogin({ email, password, loginProxy, autoAdd });
+          if (result.success && proxy && result.accountId) {
+            const proxyParts = proxy.match(/^(?:(\w+):\/\/)?(?:([^:]+):([^@]+)@)?([^:]+):(\d+)$/);
+            if (proxyParts) {
+              setAccountProxy(result.accountId, {
+                type: proxyParts[1] || 'http',
+                host: proxyParts[4],
+                port: parseInt(proxyParts[5]),
+                username: proxyParts[2] || '',
+                password: proxyParts[3] || '',
+              });
+              result.proxy = proxy;
+              ensureLsForAccount(result.accountId).catch(() => {});
+            }
+          }
+          results.push(result);
+        } catch (err) {
+          results.push({ success: false, email, error: err.message });
+        }
+      }
+      const successCount = results.filter(r => r.success).length;
+      return json(res, 200, { success: true, total: results.length, successCount, failCount: results.length - successCount, results });
+    } catch (err) {
+      return json(res, 400, { error: err.message });
+    }
+  }
+
   // ─── OAuth login (Google / GitHub via Firebase) ────────
   // POST /oauth-login — accepts Firebase idToken from client-side OAuth
   if (subpath === '/oauth-login' && method === 'POST') {
