@@ -46,8 +46,8 @@ function checkAuth(req) {
     } catch {}
   }
   if (config.dashboardPassword) return pw === config.dashboardPassword;
-  if (config.apiKey) return pw === config.apiKey;
-  return true;  // No password and no API key = open access
+  if (config.apiKey) return !pw || pw === config.apiKey;
+  return true;
 }
 
 async function processWindsurfLogin({ email, password, loginProxy, autoAdd }) {
