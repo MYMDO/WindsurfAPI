@@ -75,38 +75,42 @@ async function chatCompletion(messages, opts = {}) {
       let toolCalls = [];
       let usage = null;
       let finishReason = null;
-      let sseBuf = '';
+      let lineBuf = '';
+
+      function processLine(line) {
+        if (!line.startsWith('data: ')) return;
+        const payload = line.slice(6);
+        if (payload === '[DONE]') return;
+        try {
+          const parsed = JSON.parse(payload);
+          const delta = parsed.choices?.[0]?.delta;
+          if (delta?.content) text += delta.content;
+          if (delta?.reasoning_content) thinking += delta.reasoning_content;
+          if (delta?.tool_calls) {
+            for (const tc of delta.tool_calls) {
+              if (!toolCalls[tc.index]) toolCalls[tc.index] = { id: '', name: '', arguments: '' };
+              if (tc.id) toolCalls[tc.index].id = tc.id;
+              if (tc.function?.name) toolCalls[tc.index].name = tc.function.name;
+              if (tc.function?.arguments) toolCalls[tc.index].arguments += tc.function.arguments;
+            }
+          }
+          if (parsed.choices?.[0]?.finish_reason) finishReason = parsed.choices[0].finish_reason;
+          if (parsed.usage) usage = parsed.usage;
+        } catch {}
+      }
 
       res.on('data', (chunk) => {
-        sseBuf += chunk.toString();
-        const parts = sseBuf.split('\n\n');
-        sseBuf = parts.pop();
-        for (const part of parts) {
-          for (const line of part.split('\n')) {
-            if (!line.startsWith('data: ')) continue;
-            const payload = line.slice(6).trim();
-            if (payload === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(payload);
-            const delta = parsed.choices?.[0]?.delta;
-            if (delta?.content) text += delta.content;
-            if (delta?.reasoning_content) thinking += delta.reasoning_content;
-            if (delta?.tool_calls) {
-              for (const tc of delta.tool_calls) {
-                if (!toolCalls[tc.index]) toolCalls[tc.index] = { id: '', name: '', arguments: '' };
-                if (tc.id) toolCalls[tc.index].id = tc.id;
-                if (tc.function?.name) toolCalls[tc.index].name = tc.function.name;
-                if (tc.function?.arguments) toolCalls[tc.index].arguments += tc.function.arguments;
-              }
-            }
-            if (parsed.choices?.[0]?.finish_reason) finishReason = parsed.choices[0].finish_reason;
-            if (parsed.usage) usage = parsed.usage;
-          } catch {}
-          }
+        lineBuf += chunk.toString();
+        const lines = lineBuf.split('\n');
+        lineBuf = lines.pop();
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed) processLine(trimmed);
         }
       });
 
       res.on('end', () => {
+        if (lineBuf.trim()) processLine(lineBuf.trim());
         resolve({
           status: res.statusCode,
           text,
