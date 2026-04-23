@@ -302,13 +302,17 @@ export function getModelKeysByEnum(enumValue) {
 
 // ─── Tier access ───────────────────────────────────────────
 
-const ALL_MODEL_KEYS = Object.keys(MODELS);
-const FREE_TIER_MODELS = ['gpt-4o-mini', 'gemini-2.5-flash'];
+const FREE_TIER_BASE = ['gpt-4o-mini', 'gemini-2.5-flash'];
+const _discoveredFreeModels = new Set();
+
+export function registerDiscoveredFreeModel(key) {
+  if (MODELS[key] && !FREE_TIER_BASE.includes(key)) _discoveredFreeModels.add(key);
+}
 
 export const MODEL_TIER_ACCESS = {
   get pro() { return Object.keys(MODELS); },
-  free: FREE_TIER_MODELS,
-  unknown: FREE_TIER_MODELS,
+  get free() { return [...FREE_TIER_BASE, ..._discoveredFreeModels]; },
+  get unknown() { return [...FREE_TIER_BASE, ..._discoveredFreeModels]; },
   expired: [],
 };
 
