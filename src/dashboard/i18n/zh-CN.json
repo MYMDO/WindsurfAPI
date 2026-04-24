@@ -144,9 +144,9 @@
   },
 
   "creditsBar": {
-    "daily": "日",
-    "weekly": "周",
-    "monthly": "月"
+    "daily": "日额度",
+    "weekly": "周额度",
+    "monthly": "月额度"
   },
 
   "section": {

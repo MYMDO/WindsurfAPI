@@ -2567,9 +2567,9 @@ const App = {
         ].filter(Boolean).join('\n');
         creditCell = `<div style="min-width:120px" title="${this.esc(tipLines)}">
             <div class="text-xs" style="margin-bottom:2px"><b>${this.esc(planName.slice(0, 12))}</b> <span style="color:var(--text-dim)">${fetchedAgo}</span></div>
-            ${bar(I18n.t('creditsBar.daily'), cr.dailyPercent)}
+            ${bar(I18n.t('creditsBar.daily'), cr.dailyPercent)}${cr.dailyPercent != null ? `<span class="text-xs text-dim" style="margin-left:32px;margin-top:-2px;display:block">${cr.dailyResetAt ? '重置: ' + new Date(cr.dailyResetAt * 1000).toLocaleTimeString() : ''}</span>` : ''}
             ${bar(I18n.t('creditsBar.weekly'), cr.weeklyPercent)}
-            ${bar('P', promptPct)}
+            ${bar('提示词', promptPct)}${promptPct != null && cr.prompt ? `<span class="text-xs text-dim" style="margin-left:32px;margin-top:-2px;display:block">${cr.prompt.remaining || 0}/${cr.prompt.limit} 剩余</span>` : ''}
           </div>`;
       }
       return `
@@ -3488,7 +3488,42 @@ const App = {
       pr: 13,
       mergedAt: '2026-04-21',
       title: 'fix: 一次性审计并提交 15 个安全 / 并发 / 资源管理 bug',
-      summary: '系统性扫了一遍仓库，围绕 XSS 转义、shell 注入、OOM 防护、auth 路由位置、gRPC 双回调、LS pool 竞态、HTTP/2 frame 上限等方向提 PR。我们在这个基础上再加固了 JS-level escJsAttr、_pending 合并 ensureLs、LS 退出时释放 pooled session，以及一些后续 Antigravity 审计发现的延伸修复。感谢提醒项目该重视 issues 了。',
+      summary: '系统性扫了一遍仓库，围绕 XSS 转义、shell 注入、OOM 防护、auth 路由位置、gRPC 双回调、LS pool 竞态、HTTP/2 frame 上限等方向提 PR。',
+    },
+    {
+      login: 'motto1',
+      pr: 20,
+      mergedAt: '2026-04-21',
+      title: 'fix(dashboard): support Auth1 login and batch import',
+      summary: '为 Dashboard 添加 Windsurf Auth1 登录支持和批量账号导入功能。',
+    },
+    {
+      login: 'youfak',
+      pr: 26,
+      mergedAt: '2026-04-22',
+      title: 'feat: Docker support + LS restart fix',
+      summary: 'Docker Compose 部署支持、Dockerfile 编写、LS 进程重启修复。',
+    },
+    {
+      login: 'baily-zhang',
+      pr: 36,
+      mergedAt: '2026-04-22',
+      title: 'fix: Cascade reuse stableTurns + offset tracking',
+      summary: 'PR #36 修复 fingerprint 0% 命中率（stableTurns 只 hash user+tool）；PR #45 增量 offset 消除多轮复用时的上下文膨胀。',
+    },
+    {
+      login: 'aict666',
+      pr: 44,
+      mergedAt: '2026-04-24',
+      title: 'fix(auth): don\'t demote Pro/Trial tier after each chat call',
+      summary: '修复 chat 调用后 inferTier 把 Pro/Trial 账号降级为 free 的 bug，保护了 GetUserStatus 设定的权威 tier。',
+    },
+    {
+      login: 'smeinecke',
+      pr: 43,
+      mergedAt: '2026-04-24',
+      title: 'feat: Dashboard 完整 i18n 国际化',
+      summary: '14 个 commit 覆盖中英文翻译 + I18n 系统 + check-i18n.js 校验工具。Dashboard 支持中英文切换。',
     },
   ],
   loadCredits() {

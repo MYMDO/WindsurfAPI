@@ -144,9 +144,9 @@
   },
 
   "creditsBar": {
-    "daily": "D",
-    "weekly": "W",
-    "monthly": "M"
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly"
   },
 
   "section": {
