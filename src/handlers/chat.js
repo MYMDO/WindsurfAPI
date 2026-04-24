@@ -363,45 +363,15 @@ export async function handleChatCompletions(body) {
   // Language-following hint for CJK users (#35)
   if (useCascade) injectLanguageHint(cascadeMessages);
 
-  // ── Bare-probe API guard ──
-  // Cascade defaults to a coding-assistant persona that pads replies
-  // with preambles ("Great question!"), trailing offers ("Let me know
-  // if you need..."), tool-call attempts, and speculation. That shape
-  // fails third-party verifiers (hvoy.ai identity / structured-output /
-  // PDF tests) and looks off even to plain OpenAI clients. When a call
-  // looks like a bare API probe — no tools, no attachments, short user
-  // turn, low turn count — inject a single system hint that enforces
-  // strict format-following and truthful missing-attachment handling.
-  // Multi-turn coding sessions (tools, long context, attachments) are
-  // untouched.
-  try {
-    const hasAttachment = Array.isArray(messages) && messages.some(m =>
-      Array.isArray(m?.content) && m.content.some(p => p?.type === 'image' || p?.type === 'image_url' || p?.type === 'document' || p?.type === 'file' || p?.type === 'input_file')
-    );
-    const lastUser = [...(messages || [])].reverse().find(m => m?.role === 'user');
-    const userText = typeof lastUser?.content === 'string'
-      ? lastUser.content
-      : Array.isArray(lastUser?.content) ? lastUser.content.filter(p => p?.type === 'text').map(p => p.text || '').join(' ') : '';
-    const isBareProbe = useCascade
-      && !hasAttachment
-      && (!Array.isArray(tools) || tools.length === 0)
-      && userText.length < 1200
-      && (messages?.length || 0) <= 3;
-    if (isBareProbe) {
-      const hintText = [
-        'You are responding over a plain API. Follow these rules:',
-        '1. Answer the user\'s question correctly first, then format it exactly as they asked. Correctness is more important than brevity — for "3 × 7", the answer is "21", not "3" or "7".',
-        '2. Match the exact format requested: if they ask for just a number, output only the number. If they ask for a symbol, output only the symbol. If they ask for "序号|答案" lines, output only those lines. If they ask for JSON, output only valid JSON.',
-        '3. Respond in the same language as the user\'s question (中文问题用中文回答, English question → English answer).',
-        '4. No preambles ("Great question!"), no trailing offers ("Let me know..."), no tool calls.',
-        '5. If the user asks about an attachment (PDF, image, file, document, screenshot) that is not present in this conversation, truthfully say no file is attached and ask them to provide it. Never invent or speculate about file contents.',
-      ].join('\n');
-      const hint = { role: 'system', content: hintText };
-      cascadeMessages = [hint, ...cascadeMessages];
-      messages = [hint, ...messages];
-      log.info(`Chat[${reqId}]: bare-probe guard injected (userLen=${userText.length})`);
-    }
-  } catch {}
+  // Note: a bare-probe guard that prepended a strict-format system hint
+  // was tried and rolled back — an English rules message at the top of
+  // the conversation confused Cascade enough that it started ignoring
+  // short Chinese questions entirely ("请问中国首都是哪里？" came back
+  // as unrelated kindergarten content). Third-party verifiers that
+  // expect pure-API behavior (hvoy.ai identity / structured-output /
+  // PDF tests) are a known limitation of proxying Cascade's agentic
+  // persona — not something we can paper over with prompt injection
+  // without collateral damage.
 
   // ── Model identity prompt injection ──
   // When enabled, prepend a system message so the model identifies itself as
