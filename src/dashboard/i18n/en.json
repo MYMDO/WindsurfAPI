@@ -147,9 +147,19 @@
     "daily": "Daily Quota",
     "weekly": "Weekly Quota",
     "monthly": "Monthly Quota",
+    "prompt": "Prompt Credits",
     "dailyShort": "D",
     "weeklyShort": "W",
-    "promptShort": "P"
+    "promptShort": "P",
+    "columnTitle": "Quota Usage",
+    "columnTooltip": "Three bars indicate:\nD — Daily premium-request remaining %\nW — Weekly premium-request remaining %\nP — Monthly prompt-credit remaining %\n\nHigher = more left = safer\nHover each bar for reset time",
+    "dailyDetail": "Daily {{pct}}% remaining (resets {{reset}})",
+    "weeklyDetail": "Weekly {{pct}}% remaining (resets {{reset}})",
+    "promptDetail": "Prompt credits {{remain}} / {{limit}} remaining ({{pct}}%)",
+    "dailyNA": "Windsurf returned no daily-quota data",
+    "weeklyNA": "Windsurf returned no weekly-quota data",
+    "promptNA": "No prompt-credit data for this account",
+    "noResetTime": "reset time unknown"
   },
 
   "section": {
@@ -248,7 +258,28 @@
       "title": "Account Health Status"
     },
     "requestChart": {
-      "title": "Request Volume Time Series"
+      "title": "Request Volume Time Series",
+      "subtitle": "Switch chart type and time range · hover for exact values",
+      "typeArea": "Area",
+      "typeLine": "Line",
+      "typeBar": "Bar",
+      "typeStacked": "Stacked",
+      "metricAll": "All Metrics",
+      "metricRequests": "Requests",
+      "metricErrors": "Errors",
+      "metricSuccess": "Success",
+      "legendRequests": "Requests",
+      "legendSuccess": "Success",
+      "legendErrors": "Errors",
+      "tooltipTime": "Time",
+      "tooltipRequests": "Requests",
+      "tooltipErrors": "Errors",
+      "tooltipSuccess": "Success",
+      "tooltipRate": "Success Rate"
+    },
+    "modelPie": {
+      "title": "Model Request Distribution",
+      "desc": "Share of requests for top 8 models"
     }
   },
 

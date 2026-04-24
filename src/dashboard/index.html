@@ -478,6 +478,16 @@ thead th {
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
+thead th.th-help {
+  cursor: help;
+}
+thead th.th-help::after {
+  content: " ⓘ";
+  opacity: .5;
+  font-size: 10px;
+  margin-left: 3px;
+  letter-spacing: normal;
+}
 tbody td {
   padding: 11px 16px;
   border-bottom: 1px solid var(--border);
@@ -670,7 +680,7 @@ tbody tr:hover td { background: var(--surface-2); }
 
 /* ─── Chart ───────────────────────────────────── */
 .chart {
-  padding: 24px;
+  padding: 22px 24px 20px;
   background: linear-gradient(135deg, var(--surface), rgba(59,130,246,.03));
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -688,7 +698,200 @@ tbody tr:hover td { background: var(--surface-2); }
   animation: chart-shimmer 3s linear infinite;
 }
 @keyframes chart-shimmer { 0%{background-position:200% 0} 100%{background-position:0 0} }
-.chart h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.chart h3 { font-size: 14px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+.chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.chart-title-group { min-width: 0; flex: 1; }
+.chart-subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: .01em;
+}
+.chart-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Segmented button group — for chart-type / range switches */
+.seg-group {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg-btn {
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .18s ease;
+  font-family: inherit;
+  letter-spacing: -.005em;
+  white-space: nowrap;
+}
+.seg-btn:hover {
+  color: var(--text);
+  background: rgba(255,255,255,.03);
+}
+.seg-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  box-shadow: 0 1px 3px rgba(59,130,246,.35), 0 0 0 0.5px rgba(255,255,255,.06) inset;
+}
+
+/* Main chart canvas */
+.chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 240px;
+}
+.chart-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(17,17,24,.96);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 8px 28px rgba(0,0,0,.5);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transition: opacity .12s ease;
+  z-index: 5;
+  white-space: nowrap;
+}
+.chart-tooltip.show { opacity: 1; }
+.chart-tooltip .tt-time { color: var(--text-dim); font-size: 11px; margin-bottom: 4px; }
+.chart-tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
+.chart-tooltip .tt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.chart-tooltip .tt-label { color: var(--text-dim); margin-right: 4px; }
+.chart-tooltip .tt-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Chart legend */
+.chart-legend {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: opacity .15s ease;
+}
+.chart-legend-item.muted { opacity: .4; }
+.chart-legend-item:hover { color: var(--text); }
+.chart-legend-swatch {
+  width: 14px; height: 4px;
+  border-radius: 2px;
+}
+.chart-legend-swatch.dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.chart-legend-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Secondary chart grid (pie etc.) */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (min-width: 960px) {
+  .chart-grid { grid-template-columns: 1fr; }
+}
+
+.chart-pie-body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 28px;
+  align-items: center;
+}
+@media (max-width: 680px) {
+  .chart-pie-body { grid-template-columns: 1fr; }
+}
+.chart-pie-body canvas {
+  width: 200px;
+  height: 200px;
+  display: block;
+  margin: 0 auto;
+}
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+.pie-legend-item {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background .15s ease;
+}
+.pie-legend-item:hover { background: var(--surface-2); }
+.pie-legend-dot {
+  width: 10px; height: 10px; border-radius: 3px;
+}
+.pie-legend-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pie-legend-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.pie-legend-pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  font-size: 11px;
+  min-width: 38px;
+  text-align: right;
+}
 .bars {
   display: flex;
   align-items: flex-end;
@@ -1293,7 +1496,7 @@ window._firebaseOAuth = async function(provider) {
       <div class="section-body tight">
         <div class="table-wrap">
           <table id="accounts-table">
-            <thead><tr><th data-i18n="table.header.id">ID</th><th data-i18n="table.header.label">标签</th><th data-i18n="table.header.tier">层级</th><th data-i18n="table.header.rpm">RPM</th><th data-i18n="table.header.credits">余额</th><th data-i18n="table.header.models">可用模型</th><th data-i18n="table.header.status">状态</th><th data-i18n="table.header.error">错误</th><th data-i18n="table.header.lastUsed">最后使用</th><th data-i18n="table.header.key">Key</th><th data-i18n="table.header.action">操作</th></tr></thead>
+            <thead><tr><th data-i18n="table.header.id">ID</th><th data-i18n="table.header.label">标签</th><th data-i18n="table.header.tier">层级</th><th data-i18n="table.header.rpm">RPM</th><th class="th-help" data-i18n="table.header.credits" data-i18n-title="creditsBar.columnTooltip" title="配额使用情况&#10;&#10;日 — 每日高级请求剩余百分比&#10;周 — 每周高级请求剩余百分比&#10;词 — 本月提示词额度剩余百分比&#10;&#10;数值越高 = 剩余越多 = 越安全&#10;悬停单条进度条可查看重置时间">余额</th><th data-i18n="table.header.models">可用模型</th><th data-i18n="table.header.status">状态</th><th data-i18n="table.header.error">错误</th><th data-i18n="table.header.lastUsed">最后使用</th><th data-i18n="table.header.key">Key</th><th data-i18n="table.header.action">操作</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -1479,17 +1682,45 @@ window._firebaseOAuth = async function(provider) {
       </div>
     </div>
     <div class="metrics-grid" id="stats-cards"></div>
-    <div class="chart">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:10px">
-        <h3 style="margin:0" data-i18n="section.requestChart.title">请求量时间序列</h3>
-        <div class="btn-group" role="tablist">
-          <button class="btn btn-ghost btn-xs stats-range-btn" data-range="6" onclick="App.setStatsRange(6)" data-i18n="range.6h">近 6h</button>
-          <button class="btn btn-ghost btn-xs stats-range-btn active" data-range="24" onclick="App.setStatsRange(24)" data-i18n="range.24h">近 24h</button>
-          <button class="btn btn-ghost btn-xs stats-range-btn" data-range="72" onclick="App.setStatsRange(72)" data-i18n="range.72h">近 72h</button>
+    <div class="chart chart-main">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <h3 data-i18n="section.requestChart.title">请求量时间序列</h3>
+          <div class="chart-subtitle" data-i18n="section.requestChart.subtitle">切换图表类型和时间范围 · 悬停查看具体数值</div>
+        </div>
+        <div class="chart-controls">
+          <div class="seg-group" role="tablist">
+            <button class="seg-btn stats-type-btn active" data-type="area" onclick="App.setChartType('area')" data-i18n="section.requestChart.typeArea">面积图</button>
+            <button class="seg-btn stats-type-btn" data-type="line" onclick="App.setChartType('line')" data-i18n="section.requestChart.typeLine">折线图</button>
+            <button class="seg-btn stats-type-btn" data-type="bar" onclick="App.setChartType('bar')" data-i18n="section.requestChart.typeBar">柱状图</button>
+            <button class="seg-btn stats-type-btn" data-type="stacked" onclick="App.setChartType('stacked')" data-i18n="section.requestChart.typeStacked">堆叠图</button>
+          </div>
+          <div class="seg-group" role="tablist">
+            <button class="seg-btn stats-range-btn" data-range="6" onclick="App.setStatsRange(6)" data-i18n="range.6h">近 6h</button>
+            <button class="seg-btn stats-range-btn active" data-range="24" onclick="App.setStatsRange(24)" data-i18n="range.24h">近 24h</button>
+            <button class="seg-btn stats-range-btn" data-range="72" onclick="App.setStatsRange(72)" data-i18n="range.72h">近 72h</button>
+          </div>
         </div>
       </div>
-      <canvas id="stats-canvas" style="width:100%;height:180px;display:block"></canvas>
-      <div class="bars" id="stats-chart" style="display:none"></div>
+      <div class="chart-canvas-wrap">
+        <canvas id="stats-canvas"></canvas>
+        <div class="chart-tooltip" id="stats-tooltip"></div>
+      </div>
+      <div class="chart-legend" id="stats-legend"></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart chart-pie">
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <h3 data-i18n="section.modelPie.title">模型请求量分布</h3>
+            <div class="chart-subtitle" data-i18n="section.modelPie.desc">前 8 个模型的请求量占比</div>
+          </div>
+        </div>
+        <div class="chart-pie-body">
+          <canvas id="model-pie-canvas"></canvas>
+          <div class="pie-legend" id="model-pie-legend"></div>
+        </div>
+      </div>
     </div>
     <div class="section">
       <div class="section-header">
@@ -2559,14 +2790,24 @@ const App = {
           </div>`;
         };
         const promptPct = cr.prompt?.limit ? ((cr.prompt.remaining || 0) / cr.prompt.limit) * 100 : null;
-        const dailyTip = cr.dailyPercent != null ? (I18n.t('creditsBar.daily') + ': ' + cr.dailyPercent.toFixed(0) + '%' + (cr.dailyResetAt ? ' · ' + new Date(cr.dailyResetAt * 1000).toLocaleString() : '')) : I18n.t('creditsBar.daily') + ': N/A';
-        const weeklyTip = cr.weeklyPercent != null ? (I18n.t('creditsBar.weekly') + ': ' + cr.weeklyPercent.toFixed(0) + '%' + (cr.weeklyResetAt ? ' · ' + new Date(cr.weeklyResetAt * 1000).toLocaleString() : '')) : '';
-        const promptTip = cr.prompt?.limit ? ('Prompt: ' + (cr.prompt.remaining || 0) + '/' + cr.prompt.limit + ' remaining') : '';
+        const fmtReset = (unix) => unix ? new Date(unix * 1000).toLocaleString() : I18n.t('creditsBar.noResetTime');
+        const dailyTip = cr.dailyPercent != null
+          ? I18n.t('creditsBar.dailyDetail', { pct: cr.dailyPercent.toFixed(0), reset: fmtReset(cr.dailyResetAt) })
+          : I18n.t('creditsBar.dailyNA');
+        const weeklyTip = cr.weeklyPercent != null
+          ? I18n.t('creditsBar.weeklyDetail', { pct: cr.weeklyPercent.toFixed(0), reset: fmtReset(cr.weeklyResetAt) })
+          : I18n.t('creditsBar.weeklyNA');
+        const promptTip = cr.prompt?.limit
+          ? I18n.t('creditsBar.promptDetail', { remain: cr.prompt.remaining || 0, limit: cr.prompt.limit, pct: (promptPct || 0).toFixed(0) })
+          : I18n.t('creditsBar.promptNA');
+        const shortD = I18n.t('creditsBar.dailyShort');
+        const shortW = I18n.t('creditsBar.weeklyShort');
+        const shortP = I18n.t('creditsBar.promptShort');
         creditCell = `<div style="min-width:120px;max-width:160px">
             <div class="text-xs" style="margin-bottom:2px"><b>${this.esc(planName.slice(0, 12))}</b> <span style="color:var(--text-dim)">${fetchedAgo}</span></div>
-            ${bar('D', cr.dailyPercent, dailyTip)}
-            ${bar('W', cr.weeklyPercent, weeklyTip)}
-            ${bar('P', promptPct, promptTip)}
+            ${bar(shortD, cr.dailyPercent, dailyTip)}
+            ${bar(shortW, cr.weeklyPercent, weeklyTip)}
+            ${bar(shortP, promptPct, promptTip)}
           </div>`;
       }
       return `
@@ -3130,17 +3371,43 @@ const App = {
 
   // ─── Stats ───────────────────────────────────
   statsRange: 24,
+  statsChartType: 'area',
+  statsMetrics: { requests: true, success: true, errors: true },
+  _lastStatsData: null,
+  _chartColors: {
+    requests: '#3b82f6',
+    success: '#22c55e',
+    errors: '#ef4444',
+  },
+  _pieColors: ['#6366f1', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#a78bfa', '#14b8a6', '#ec4899'],
 
   setStatsRange(hours) {
     this.statsRange = hours;
     document.querySelectorAll('.stats-range-btn').forEach(b => {
       b.classList.toggle('active', Number(b.dataset.range) === hours);
     });
-    this.loadStats();
+    if (this._lastStatsData) this.renderMainChart(this._lastStatsData);
+  },
+
+  setChartType(type) {
+    this.statsChartType = type;
+    document.querySelectorAll('.stats-type-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.type === type);
+    });
+    if (this._lastStatsData) this.renderMainChart(this._lastStatsData);
+  },
+
+  toggleChartMetric(metric) {
+    const m = this.statsMetrics;
+    const tryOff = { ...m, [metric]: !m[metric] };
+    if (!tryOff.requests && !tryOff.success && !tryOff.errors) return;
+    this.statsMetrics = tryOff;
+    if (this._lastStatsData) this.renderMainChart(this._lastStatsData);
   },
 
   async loadStats() {
     const d = await this.api('GET', '/stats');
+    this._lastStatsData = d;
     const totalReq = d.totalRequests || 0;
     const successRate = totalReq > 0 ? ((d.successCount/totalReq)*100).toFixed(1) : '0.0';
     const allP95 = Object.values(d.modelCounts || {})
@@ -3157,7 +3424,6 @@ const App = {
     `;
 
     const models = d.modelCounts || {};
-    // sort by requests desc
     const sortedModels = Object.entries(models).sort(([,a],[,b]) => b.requests - a.requests);
     const tbody = document.querySelector('#model-stats-table tbody');
     tbody.innerHTML = sortedModels.map(([m, s]) => {
@@ -3176,7 +3442,6 @@ const App = {
       </tr>`;
     }).join('') || `<tr class="empty-row"><td colspan="8">${I18n.t('table.empty.noRequestData')}</td></tr>`;
 
-    // Account breakdown
     const accounts = d.accountCounts || {};
     const sortedAccts = Object.entries(accounts).sort(([,a],[,b]) => b.requests - a.requests);
     const acctBody = document.querySelector('#account-stats-table tbody');
@@ -3193,123 +3458,369 @@ const App = {
       }).join('') || `<tr class="empty-row"><td colspan="5">${I18n.t('table.empty.noAccountRequestData')}</td></tr>`;
     }
 
-    // Time-range canvas chart
-    const buckets = (d.hourlyBuckets || []).slice(-this.statsRange);
+    this.renderMainChart(d);
+    this.renderModelPie(d);
+
+    this.poll('stats', () => this.loadStats(), 30000);
+  },
+
+  _setupCanvas(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    return { ctx, W: rect.width, H: rect.height };
+  },
+
+  renderMainChart(d) {
     const canvas = document.getElementById('stats-canvas');
-    if (canvas && buckets.length > 1) {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      const W = rect.width, H = rect.height;
-      const pad = { t: 10, r: 10, b: 24, l: 36 };
-      const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
-      const maxReq = Math.max(1, ...buckets.map(b => b.requests));
-      const maxErr = Math.max(0, ...buckets.map(b => b.errors));
-      const step = cW / (buckets.length - 1);
+    const legend = document.getElementById('stats-legend');
+    const tipEl = document.getElementById('stats-tooltip');
+    if (!canvas) return;
 
-      ctx.clearRect(0, 0, W, H);
+    const buckets = (d.hourlyBuckets || []).slice(-this.statsRange).map(b => ({
+      hour: b.hour,
+      requests: b.requests || 0,
+      errors: b.errors || 0,
+      success: Math.max(0, (b.requests || 0) - (b.errors || 0)),
+    }));
 
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255,255,255,.06)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= 4; i++) {
-        const y = pad.t + (cH / 4) * i;
-        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-      }
+    const { ctx, W, H } = this._setupCanvas(canvas);
+    ctx.clearRect(0, 0, W, H);
 
-      // Request area fill
-      const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
-      grad.addColorStop(0, 'rgba(59,130,246,.35)');
-      grad.addColorStop(1, 'rgba(59,130,246,.02)');
-      ctx.beginPath();
-      ctx.moveTo(pad.l, pad.t + cH);
-      buckets.forEach((b, i) => {
-        const x = pad.l + i * step;
-        const y = pad.t + cH - (b.requests / maxReq) * cH;
-        i === 0 ? ctx.lineTo(x, y) : ctx.lineTo(x, y);
-      });
-      ctx.lineTo(pad.l + (buckets.length - 1) * step, pad.t + cH);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // Request line
-      ctx.beginPath();
-      ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 2;
-      ctx.lineJoin = 'round';
-      buckets.forEach((b, i) => {
-        const x = pad.l + i * step;
-        const y = pad.t + cH - (b.requests / maxReq) * cH;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Error line (if any)
-      if (maxErr > 0) {
-        ctx.beginPath();
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 3]);
-        buckets.forEach((b, i) => {
-          const x = pad.l + i * step;
-          const y = pad.t + cH - (b.errors / maxReq) * cH;
-          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      // Dots
-      buckets.forEach((b, i) => {
-        if (b.requests === 0) return;
-        const x = pad.l + i * step;
-        const y = pad.t + cH - (b.requests / maxReq) * cH;
-        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = b.errors > 0 ? '#ef4444' : '#3b82f6';
-        ctx.fill();
-      });
-
-      // X-axis labels
-      ctx.fillStyle = 'rgba(255,255,255,.4)';
-      ctx.font = '10px sans-serif';
-      ctx.textAlign = 'center';
-      const labelStep = Math.max(1, Math.floor(buckets.length / 8));
-      buckets.forEach((b, i) => {
-        if (i % labelStep !== 0 && i !== buckets.length - 1) return;
-        const x = pad.l + i * step;
-        const hr = new Date(b.hour).getHours();
-        ctx.fillText(hr + ':00', x, H - 4);
-      });
-
-      // Y-axis labels
-      ctx.textAlign = 'right';
-      for (let i = 0; i <= 4; i++) {
-        const v = Math.round(maxReq * (4 - i) / 4);
-        const y = pad.t + (cH / 4) * i + 4;
-        ctx.fillText(v, pad.l - 4, y);
-      }
-
-      // Legend
-      ctx.fillStyle = '#3b82f6'; ctx.fillRect(W - pad.r - 80, 4, 8, 3);
-      ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.textAlign = 'left'; ctx.fillText('Requests', W - pad.r - 68, 8);
-      if (maxErr > 0) {
-        ctx.fillStyle = '#ef4444'; ctx.fillRect(W - pad.r - 80, 14, 8, 3);
-        ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillText('Errors', W - pad.r - 68, 18);
-      }
-    } else if (canvas) {
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (buckets.length < 1) {
       ctx.fillStyle = 'rgba(255,255,255,.3)';
       ctx.font = '13px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(I18n.t('table.empty.noData'), canvas.width / 2, canvas.height / 2);
+      ctx.fillText(I18n.t('table.empty.noData'), W / 2, H / 2);
+      if (legend) legend.innerHTML = '';
+      return;
     }
 
-    this.poll('stats', () => this.loadStats(), 30000);
+    const pad = { t: 14, r: 16, b: 28, l: 44 };
+    const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+    const step = buckets.length > 1 ? cW / (buckets.length - 1) : cW;
+    const slotW = buckets.length > 1 ? cW / buckets.length : cW;
+    const m = this.statsMetrics;
+    const type = this.statsChartType;
+
+    // Compute y-max based on chart type + enabled metrics
+    let maxY;
+    if (type === 'stacked') {
+      maxY = Math.max(1, ...buckets.map(b => {
+        let s = 0;
+        if (m.success) s += b.success;
+        if (m.errors) s += b.errors;
+        return s || (m.requests ? b.requests : 0);
+      }));
+    } else {
+      const vals = [];
+      if (m.requests) vals.push(...buckets.map(b => b.requests));
+      if (m.success) vals.push(...buckets.map(b => b.success));
+      if (m.errors) vals.push(...buckets.map(b => b.errors));
+      maxY = Math.max(1, ...vals);
+    }
+    // Round up to nice number
+    const nice = (n) => {
+      const exp = Math.pow(10, Math.floor(Math.log10(n)));
+      const frac = n / exp;
+      const niceFrac = frac <= 1 ? 1 : frac <= 2 ? 2 : frac <= 5 ? 5 : 10;
+      return niceFrac * exp;
+    };
+    maxY = nice(maxY);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,.05)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.t + (cH / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(W - pad.r, y);
+      ctx.stroke();
+    }
+
+    // Y-axis labels
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.font = '10px var(--mono), monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= 4; i++) {
+      const v = Math.round(maxY * (4 - i) / 4);
+      const y = pad.t + (cH / 4) * i;
+      ctx.fillText(v, pad.l - 8, y);
+    }
+
+    // X coordinate for bucket i
+    const xAt = (i) => buckets.length > 1 ? pad.l + i * step : pad.l + cW / 2;
+    const yAt = (v) => pad.t + cH - (v / maxY) * cH;
+
+    const drawSeries = (values, color, opts = {}) => {
+      if (buckets.length < 2) {
+        // single point
+        const x = xAt(0);
+        const y = yAt(values[0]);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+      // Area fill
+      if (opts.fill) {
+        const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+        grad.addColorStop(0, color + '55');
+        grad.addColorStop(1, color + '05');
+        ctx.beginPath();
+        ctx.moveTo(xAt(0), pad.t + cH);
+        values.forEach((v, i) => ctx.lineTo(xAt(i), yAt(v)));
+        ctx.lineTo(xAt(values.length - 1), pad.t + cH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+      // Line
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = opts.thin ? 1.5 : 2;
+      if (opts.dash) ctx.setLineDash([4, 3]);
+      ctx.lineJoin = 'round';
+      values.forEach((v, i) => {
+        const x = xAt(i), y = yAt(v);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Dots
+      values.forEach((v, i) => {
+        if (v === 0) return;
+        ctx.beginPath();
+        ctx.arc(xAt(i), yAt(v), 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+    };
+
+    const drawBars = () => {
+      const barW = Math.max(3, Math.min(18, slotW * 0.7));
+      const metrics = [];
+      if (m.requests) metrics.push({ key: 'requests', color: this._chartColors.requests });
+      if (m.success) metrics.push({ key: 'success', color: this._chartColors.success });
+      if (m.errors) metrics.push({ key: 'errors', color: this._chartColors.errors });
+      if (!metrics.length) return;
+      const subW = barW / metrics.length;
+      buckets.forEach((b, i) => {
+        const cx = xAt(i);
+        metrics.forEach((mk, mi) => {
+          const v = b[mk.key];
+          if (v === 0) return;
+          const h = (v / maxY) * cH;
+          const x = cx - barW / 2 + mi * subW;
+          const y = pad.t + cH - h;
+          ctx.fillStyle = mk.color;
+          this._roundRect(ctx, x, y, Math.max(subW - 1, 1), h, 2);
+          ctx.fill();
+        });
+      });
+    };
+
+    const drawStacked = () => {
+      const barW = Math.max(4, Math.min(22, slotW * 0.75));
+      buckets.forEach((b, i) => {
+        const cx = xAt(i);
+        let stackV = 0;
+        const segments = [];
+        if (m.success && b.success > 0) segments.push({ v: b.success, color: this._chartColors.success });
+        if (m.errors && b.errors > 0) segments.push({ v: b.errors, color: this._chartColors.errors });
+        segments.forEach(seg => {
+          const h = (seg.v / maxY) * cH;
+          const y = pad.t + cH - ((stackV + seg.v) / maxY) * cH;
+          ctx.fillStyle = seg.color;
+          this._roundRect(ctx, cx - barW / 2, y, barW, h, 2);
+          ctx.fill();
+          stackV += seg.v;
+        });
+      });
+    };
+
+    // Render based on type
+    if (type === 'bar') {
+      drawBars();
+    } else if (type === 'stacked') {
+      drawStacked();
+    } else {
+      // area or line
+      const fill = type === 'area';
+      if (m.requests) drawSeries(buckets.map(b => b.requests), this._chartColors.requests, { fill });
+      if (m.success) drawSeries(buckets.map(b => b.success), this._chartColors.success, { fill });
+      if (m.errors) drawSeries(buckets.map(b => b.errors), this._chartColors.errors, { fill: false, thin: true, dash: type === 'area' });
+    }
+
+    // X-axis labels
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.font = '10px var(--mono), monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const labelStep = Math.max(1, Math.floor(buckets.length / 8));
+    buckets.forEach((b, i) => {
+      if (i % labelStep !== 0 && i !== buckets.length - 1) return;
+      const hr = new Date(b.hour).getHours();
+      ctx.fillText(hr.toString().padStart(2, '0') + ':00', xAt(i), pad.t + cH + 8);
+    });
+
+    // Store hit-map for tooltip
+    this._chartHitMap = { buckets, xAt, yAt, pad, cH, slotW, W, H };
+
+    // Hover tooltip
+    if (tipEl && !canvas._hoverBound) {
+      canvas._hoverBound = true;
+      canvas.addEventListener('mousemove', (ev) => {
+        const hm = this._chartHitMap;
+        if (!hm) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = ev.clientX - rect.left;
+        const y = ev.clientY - rect.top;
+        if (x < hm.pad.l || x > hm.W - 16 || y < hm.pad.t || y > hm.pad.t + hm.cH) {
+          tipEl.classList.remove('show');
+          return;
+        }
+        // Find nearest bucket
+        let best = 0, bestD = Infinity;
+        hm.buckets.forEach((_, i) => {
+          const d = Math.abs(hm.xAt(i) - x);
+          if (d < bestD) { bestD = d; best = i; }
+        });
+        const b = hm.buckets[best];
+        const rate = b.requests > 0 ? ((b.success / b.requests) * 100).toFixed(1) : '—';
+        const time = new Date(b.hour).toLocaleString();
+        const c = this._chartColors;
+        tipEl.innerHTML = `
+          <div class="tt-time">${this.esc(time)}</div>
+          <div class="tt-row"><span class="tt-dot" style="background:${c.requests}"></span><span class="tt-label">${I18n.t('section.requestChart.tooltipRequests')}</span><span class="tt-value">${b.requests}</span></div>
+          <div class="tt-row"><span class="tt-dot" style="background:${c.success}"></span><span class="tt-label">${I18n.t('section.requestChart.tooltipSuccess')}</span><span class="tt-value">${b.success}</span></div>
+          <div class="tt-row"><span class="tt-dot" style="background:${c.errors}"></span><span class="tt-label">${I18n.t('section.requestChart.tooltipErrors')}</span><span class="tt-value">${b.errors}</span></div>
+          <div class="tt-row"><span class="tt-label">${I18n.t('section.requestChart.tooltipRate')}</span><span class="tt-value">${rate}%</span></div>
+        `;
+        tipEl.classList.add('show');
+        const tipRect = tipEl.getBoundingClientRect();
+        let left = hm.xAt(best);
+        let top = hm.pad.t - 6;
+        if (left + tipRect.width / 2 > hm.W - 4) left = hm.W - tipRect.width / 2 - 4;
+        if (left - tipRect.width / 2 < 4) left = tipRect.width / 2 + 4;
+        tipEl.style.left = left + 'px';
+        tipEl.style.top = top + 'px';
+      });
+      canvas.addEventListener('mouseleave', () => { tipEl.classList.remove('show'); });
+    }
+
+    // Legend with totals
+    if (legend) {
+      const totals = {
+        requests: buckets.reduce((a, b) => a + b.requests, 0),
+        success: buckets.reduce((a, b) => a + b.success, 0),
+        errors: buckets.reduce((a, b) => a + b.errors, 0),
+      };
+      const items = [
+        { key: 'requests', label: I18n.t('section.requestChart.legendRequests'), color: this._chartColors.requests },
+        { key: 'success', label: I18n.t('section.requestChart.legendSuccess'), color: this._chartColors.success },
+        { key: 'errors', label: I18n.t('section.requestChart.legendErrors'), color: this._chartColors.errors },
+      ];
+      legend.innerHTML = items.map(it => `
+        <div class="chart-legend-item ${m[it.key] ? '' : 'muted'}" onclick="App.toggleChartMetric('${it.key}')">
+          <span class="chart-legend-swatch dot" style="background:${it.color}"></span>
+          <span>${it.label}</span>
+          <span class="chart-legend-value">${totals[it.key]}</span>
+        </div>
+      `).join('');
+    }
+  },
+
+  _roundRect(ctx, x, y, w, h, r) {
+    if (h <= 0 || w <= 0) return;
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x, y + h);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.closePath();
+  },
+
+  renderModelPie(d) {
+    const canvas = document.getElementById('model-pie-canvas');
+    const legend = document.getElementById('model-pie-legend');
+    if (!canvas) return;
+
+    const entries = Object.entries(d.modelCounts || {})
+      .map(([name, s]) => ({ name, count: s.requests || 0 }))
+      .filter(e => e.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    const top = entries.slice(0, 8);
+    const others = entries.slice(8).reduce((a, b) => a + b.count, 0);
+    if (others > 0) top.push({ name: 'others', count: others });
+
+    const total = top.reduce((a, b) => a + b.count, 0);
+
+    const { ctx, W, H } = this._setupCanvas(canvas);
+    ctx.clearRect(0, 0, W, H);
+
+    if (total === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,.3)';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(I18n.t('table.empty.noData'), W / 2, H / 2);
+      if (legend) legend.innerHTML = '';
+      return;
+    }
+
+    const cx = W / 2, cy = H / 2;
+    const rOuter = Math.min(W, H) / 2 - 6;
+    const rInner = rOuter * 0.58;
+
+    let angle = -Math.PI / 2;
+    top.forEach((seg, i) => {
+      const frac = seg.count / total;
+      const a2 = angle + frac * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(angle) * rInner, cy + Math.sin(angle) * rInner);
+      ctx.arc(cx, cy, rOuter, angle, a2);
+      ctx.arc(cx, cy, rInner, a2, angle, true);
+      ctx.closePath();
+      ctx.fillStyle = this._pieColors[i % this._pieColors.length];
+      ctx.fill();
+      angle = a2;
+    });
+
+    // Center label
+    ctx.fillStyle = 'var(--text)';
+    ctx.fillStyle = '#f4f4f5';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '600 22px var(--mono), monospace';
+    ctx.fillText(total, cx, cy - 6);
+    ctx.fillStyle = 'rgba(255,255,255,.4)';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(I18n.t('section.requestChart.legendRequests'), cx, cy + 12);
+
+    if (legend) {
+      legend.innerHTML = top.map((seg, i) => {
+        const pct = (seg.count / total * 100).toFixed(1);
+        return `<div class="pie-legend-item" title="${this.esc(seg.name)}">
+          <span class="pie-legend-dot" style="background:${this._pieColors[i % this._pieColors.length]}"></span>
+          <span class="pie-legend-name">${this.esc(seg.name)}</span>
+          <span class="pie-legend-count">${seg.count}</span>
+          <span class="pie-legend-pct">${pct}%</span>
+        </div>`;
+      }).join('');
+    }
   },
 
   async resetStats() {

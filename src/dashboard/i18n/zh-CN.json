@@ -144,12 +144,22 @@
   },
 
   "creditsBar": {
-    "daily": "每日额度",
-    "weekly": "每周额度",
+    "daily": "每日配额",
+    "weekly": "每周配额",
     "monthly": "每月额度",
+    "prompt": "提示词额度",
     "dailyShort": "日",
     "weeklyShort": "周",
-    "promptShort": "额"
+    "promptShort": "词",
+    "columnTitle": "配额使用情况",
+    "columnTooltip": "三条进度条分别代表:\n日 — 每日高级请求剩余百分比\n周 — 每周高级请求剩余百分比\n词 — 本月提示词额度剩余百分比\n\n数值越高 = 剩余越多 = 越安全\n悬停单条进度条可查看重置时间",
+    "dailyDetail": "每日剩余 {{pct}}%（于 {{reset}} 重置）",
+    "weeklyDetail": "每周剩余 {{pct}}%（于 {{reset}} 重置）",
+    "promptDetail": "本月提示词剩余 {{remain}} / {{limit}}（{{pct}}%）",
+    "dailyNA": "Windsurf 未返回每日配额数据",
+    "weeklyNA": "Windsurf 未返回每周配额数据",
+    "promptNA": "该账号无提示词额度数据",
+    "noResetTime": "重置时间未知"
   },
 
   "section": {
@@ -248,7 +258,28 @@
       "title": "账号健康状况"
     },
     "requestChart": {
-      "title": "请求量时间序列"
+      "title": "请求量时间序列",
+      "subtitle": "切换图表类型和时间范围 · 悬停查看具体数值",
+      "typeArea": "面积图",
+      "typeLine": "折线图",
+      "typeBar": "柱状图",
+      "typeStacked": "堆叠图",
+      "metricAll": "全部指标",
+      "metricRequests": "请求量",
+      "metricErrors": "错误数",
+      "metricSuccess": "成功数",
+      "legendRequests": "请求",
+      "legendSuccess": "成功",
+      "legendErrors": "错误",
+      "tooltipTime": "时间",
+      "tooltipRequests": "请求",
+      "tooltipErrors": "错误",
+      "tooltipSuccess": "成功",
+      "tooltipRate": "成功率"
+    },
+    "modelPie": {
+      "title": "模型请求量分布",
+      "desc": "前 8 个模型的请求量占比"
     }
   },
 
