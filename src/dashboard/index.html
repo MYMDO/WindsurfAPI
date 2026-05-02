@@ -4465,11 +4465,33 @@ docker compose up -d --force-recreate</pre>
     const uptimeSec = d.startedAt ? Math.floor((Date.now() - d.startedAt) / 1000) : 0;
     const fmtUptime = s => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m` : s < 86400 ? `${(s/3600).toFixed(1)}h` : `${(s/86400).toFixed(1)}d`;
 
+    // v2.0.69 (#118 wnfilm): show fresh_input / cache_read / cache_write /
+    // output as separate buckets so users can tell whether their quota
+    // burn is real input or just cache traffic. Numbers come from the
+    // tokenTotals state recordTokenUsage feeds on every completed turn.
+    const tt = d.tokenTotals || { fresh_input: 0, cache_read: 0, cache_write: 0, output: 0, total: 0, requests_with_usage: 0 };
+    const fmtTok = (n) => n >= 1_000_000 ? (n/1_000_000).toFixed(1) + 'M'
+                       : n >= 1_000 ? (n/1_000).toFixed(1) + 'K'
+                       : String(n);
+    const tokensCardSub = tt.requests_with_usage > 0
+      ? `${tt.requests_with_usage} req · total ${fmtTok(tt.total)}`
+      : (I18n.t('card.tokens.subtitle.empty') || 'no usage data yet');
+
     document.getElementById('stats-cards').innerHTML = `
       <div class="card info"><div class="card-header"><div class="card-title">${I18n.t('card.stats.title')}</div></div><div class="card-value">${totalReq}</div><div class="card-sub">${I18n.t('card.stats.subtitle', { time: fmtUptime(uptimeSec) })}</div></div>
       <div class="card success"><div class="card-header"><div class="card-title">${I18n.t('card.success.title')}</div></div><div class="card-value">${d.successCount || 0}</div><div class="card-sub">${I18n.t('card.success.subtitle', { rate: successRate })}</div></div>
       <div class="card error"><div class="card-header"><div class="card-title">${I18n.t('card.errors.title')}</div></div><div class="card-value">${d.errorCount || 0}</div><div class="card-sub">${I18n.t('card.errors.subtitle', { rate: totalReq > 0 ? (100-Number(successRate)).toFixed(1) : '0.0' })}</div></div>
       <div class="card accent"><div class="card-header"><div class="card-title">${I18n.t('card.p95Latency.title')}</div></div><div class="card-value">${avgP95}<span style="font-size:14px;font-weight:400;margin-left:4px">ms</span></div><div class="card-sub">${I18n.t('card.p95Latency.subtitle', { count: allP95.length })}</div></div>
+      <div class="card info" style="grid-column: span 2;">
+        <div class="card-header"><div class="card-title">${I18n.t('card.tokens.title') || 'Token usage breakdown'}</div></div>
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-top:8px;">
+          <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">fresh input</div><div style="font-size:18px;font-weight:600;">${fmtTok(tt.fresh_input)}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">cache read</div><div style="font-size:18px;font-weight:600;">${fmtTok(tt.cache_read)}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">cache write</div><div style="font-size:18px;font-weight:600;">${fmtTok(tt.cache_write)}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">output</div><div style="font-size:18px;font-weight:600;">${fmtTok(tt.output)}</div></div>
+        </div>
+        <div class="card-sub" style="margin-top:8px;">${tokensCardSub}</div>
+      </div>
     `;
 
     const models = d.modelCounts || {};

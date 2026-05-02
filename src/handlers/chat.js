@@ -9,7 +9,7 @@ import { getApiKey, acquireAccountByKey, releaseAccount, getAccountAvailability,
 import { resolveModel, getModelInfo } from '../models.js';
 import { getLsFor, ensureLs } from '../langserver.js';
 import { config, log } from '../config.js';
-import { recordRequest } from '../dashboard/stats.js';
+import { recordRequest, recordTokenUsage } from '../dashboard/stats.js';
 import { markRequest as markQuietWindowRequest } from '../dashboard/quiet-window-updater.js';
 import { isModelAllowed } from '../dashboard/model-access.js';
 import { cacheKey, cacheGet, cacheSet } from '../cache.js';
@@ -1352,7 +1352,19 @@ export async function handleChatCompletions(body, context = {}) {
     // describes the *unmapped* tools. Mapped tools are delivered via
     // cascade native trajectory steps and would only confuse the planner
     // if they also appeared in the toolPreamble emulation block.
-    const budgetTools = emulationTools.length ? emulationTools : (tools || []);
+    //
+    // v2.0.69 (#115 follow-up): operator can opt to suppress emulation
+    // toolPreamble entirely when partition mode is on
+    // (WINDSURFAPI_NATIVE_BRIDGE_NO_EMUL=1) — useful for diagnosing
+    // whether the long emulation block (200+ lines describing 10
+    // unmapped tools) is what's pushing GPT into refuse mode. With the
+    // flag on, the planner only sees its own native tool inventory and
+    // unmapped tools become silently invisible to the model. Trade-off:
+    // model can't call unmapped tools at all, but neither can it get
+    // confused about whether it should be using the cascade-native path
+    // or the emulation path.
+    const suppressEmul = nativeBridgeOn && process.env.WINDSURFAPI_NATIVE_BRIDGE_NO_EMUL === '1';
+    const budgetTools = suppressEmul ? [] : (emulationTools.length ? emulationTools : (tools || []));
     const budget = applyToolPreambleBudget(budgetTools, tool_choice, callerEnv, {
       modelKey: routingModelKey,
       provider: modelInfo?.provider || null,
@@ -2068,6 +2080,9 @@ async function nonStreamResponse(client, id, created, model, modelKey, messages,
     // non-reuse requests with `cache_control: { ttl: '1h' }` still attribute
     // their tokens to ephemeral_1h_input_tokens correctly (see #82, #83).
     const usage = buildUsageBody(serverUsage, messages, allText, allThinking, cachePolicy);
+    // v2.0.69 (#118): feed bucket totals into stats so dashboard can show
+    // fresh_input vs cache_read vs cache_write breakdown.
+    try { recordTokenUsage(usage); } catch {}
     const finishReason = toolCalls.length ? 'tool_calls' : 'stop';
     return {
       status: 200,
@@ -2687,6 +2702,7 @@ function streamResponse(id, created, model, modelKey, provider, messages, cascad
               choices: [{ index: 0, delta: {}, finish_reason: finalReason }] });
             {
               const usage = buildUsageBody(cascadeResult?.usage || null, messages, accText, accThinking, cachePolicy);
+              try { recordTokenUsage(usage); } catch {}
               send({ id, object: 'chat.completion.chunk', created, model,
                 choices: [], usage });
             }

@@ -479,6 +479,12 @@
       "title": "Response Cache",
       "subtitle": "{{hits}} hit / {{misses}} miss · {{size}}/{{max}} entries"
     },
+    "tokens": {
+      "title": "Token usage breakdown",
+      "subtitle": {
+        "empty": "no usage data yet"
+      }
+    },
     "banStats": {
       "title": "Health Overview"
     },

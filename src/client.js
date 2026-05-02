@@ -174,6 +174,15 @@ const CASCADE_TIMEOUTS = {
   pollIntervalMs:   positiveIntEnv('CASCADE_POLL_INTERVAL_MS', 500),
   coldStallBaseMs:  positiveIntEnv('CASCADE_COLD_STALL_BASE_MS', 30_000),
   warmStallMs:      positiveIntEnv('CASCADE_WARM_STALL_MS', 25_000),
+  // v2.0.69 (#57 123cek follow-up): thinking-mode requests sometimes
+  // pause emission for >25s mid-reasoning even though the planner is
+  // actively working — Claude 4.5/4.6/4.7 -thinking variants do this on
+  // hard math / multi-file analysis. Old behaviour killed those
+  // cascades at 25s of silence, surfacing as "思考 200 多秒之后会中断".
+  // Once we've seen ANY thinking emission this turn, fall back to a
+  // longer ceiling (default 120s) so deep-think windows survive natural
+  // pauses. Text-mode requests (no thinking) keep the strict 25s.
+  warmStallThinkingMs: positiveIntEnv('CASCADE_WARM_STALL_THINKING_MS', 120_000),
   idleGraceMs:      positiveIntEnv('CASCADE_IDLE_GRACE_MS', 8_000),
   stallRetryMinText: positiveIntEnv('CASCADE_STALL_RETRY_MIN_TEXT', 300),
 };
@@ -872,9 +881,17 @@ export class WindsurfClient {
           }
         }
 
-        // Warm stall: text stopped growing for 25s while planner is active.
+        // Warm stall: text stopped growing while planner is active.
         // Placed AFTER the step loop so lastGrowthAt is current-poll fresh.
-        if (sawText && lastStatus !== 1 && (Date.now() - lastGrowthAt) > NO_GROWTH_STALL_MS) {
+        // v2.0.69 (#57 follow-up): thinking-mode turns get a longer
+        // ceiling (warmStallThinkingMs, default 120s) once we've seen
+        // any thinking emit this turn — Claude 4.x -thinking variants
+        // legitimately go silent for 30-90s mid-reasoning on hard
+        // problems and the old 25s ceiling killed them.
+        const effectiveWarmStallMs = totalThinking > 0
+          ? CASCADE_TIMEOUTS.warmStallThinkingMs
+          : NO_GROWTH_STALL_MS;
+        if (sawText && lastStatus !== 1 && (Date.now() - lastGrowthAt) > effectiveWarmStallMs) {
           const diag = { msSinceGrowth: Date.now() - lastGrowthAt, textLen: totalYielded, thinkingLen: totalThinking, stepCount: yieldedByStep.size, toolCalls: seenToolCallIds.size, lastStatus };
           if (totalYielded < STALL_RETRY_MIN_TEXT) {
             log.warn('Cascade warm stall (short, retrying on next account)', diag);

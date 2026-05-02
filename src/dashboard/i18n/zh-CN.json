@@ -479,6 +479,12 @@
       "title": "响应缓存",
       "subtitle": "{{hits}} 命中 / {{misses}} 未命中 · {{size}}/{{max}} 条"
     },
+    "tokens": {
+      "title": "Token 用量分布",
+      "subtitle": {
+        "empty": "等首个完整请求结束才会有数据"
+      }
+    },
     "banStats": {
       "title": "健康概览"
     },
