@@ -10,6 +10,7 @@ import { resolveModel, getModelInfo } from '../models.js';
 import { getLsFor, ensureLs } from '../langserver.js';
 import { config, log } from '../config.js';
 import { recordRequest, recordTokenUsage } from '../dashboard/stats.js';
+import { extractIntentFromNarrative } from './intent-extractor.js';
 import { markRequest as markQuietWindowRequest } from '../dashboard/quiet-window-updater.js';
 import { isModelAllowed } from '../dashboard/model-access.js';
 import { cacheKey, cacheGet, cacheSet } from '../cache.js';
@@ -2065,11 +2066,34 @@ async function nonStreamResponse(client, id, created, model, modelKey, messages,
           if (/\{\s*"name"\s*:\s*"[a-zA-Z0-9_-]+"\s*,\s*"arguments"/.test(allText)) markers.push('bare_json');
           if (/^\s*(?:I'?ll|I will|Let me|I'?m going to)\s+(?:call|use|invoke|run)/im.test(allText)) markers.push('natural_lang');
           log.info(`Chat[non-stream]: emulateTools=true but parser found 0 tool_calls (model=${modelKey} provider=${provider}); markers=${markers.join(',') || 'none'}; head="${rawTextHead}"`);
-          // v2.0.71 (#115) — fabricate detection. When markers=none AND
-          // output pattern-matches a hallucinated tool result, warn at
-          // log level and (optionally) reject so the agent loop doesn't
-          // treat the fake output as a real tool result.
-          if (markers.length === 0) {
+          // v2.0.72 (#115 #120) — NLU intent recovery. GPT/GLM/Kimi
+          // narrate "I'll call X with Y" instead of emitting the
+          // <tool_call> markup. Try to extract tool_call(s) from
+          // natural-language narrative before falling back to
+          // fabricate detection.
+          if (markers.length === 0 && Array.isArray(tools) && tools.length > 0) {
+            const lastUser = latestRealUserText(messages) || '';
+            const recovered = extractIntentFromNarrative(allText, tools, { lastUserText: lastUser });
+            if (recovered.length) {
+              const recoveredCalls = recovered.map((r, i) => ({
+                id: `nlu_${i}_${Date.now().toString(36)}`,
+                name: r.name,
+                argumentsJson: r.argumentsJson,
+              }));
+              const filtered = filterToolCallsByAllowlist(recoveredCalls, tools);
+              if (filtered.length) {
+                log.info(`Chat[non-stream]: NLU recovery — promoted ${filtered.length} narrative tool_call(s) (head="${rawTextHead}")`);
+                toolCalls = filtered;
+                allText = '';
+              }
+            }
+          }
+          // v2.0.71 (#115) — fabricate detection. When markers=none,
+          // NLU recovery didn't pick up anything, AND output pattern-
+          // matches a hallucinated tool result, warn at log level and
+          // (optionally) reject so the agent loop doesn't treat fake
+          // output as a real tool result.
+          if (markers.length === 0 && toolCalls.length === 0) {
             const lastUser = latestRealUserText(messages) || '';
             const fab = detectFabricatedToolResult(allText, { lastUserText: lastUser });
             if (fab) {
@@ -2736,8 +2760,34 @@ function streamResponse(id, created, model, modelKey, provider, messages, cascad
                 if (/\{\s*"name"\s*:\s*"[a-zA-Z0-9_-]+"\s*,\s*"arguments"/.test(accText)) markers.push('bare_json');
                 if (/^\s*(?:I'?ll|I will|Let me|I'?m going to)\s+(?:call|use|invoke|run)/im.test(accText)) markers.push('natural_lang');
                 log.info(`Chat[stream]: emulateTools=true but parser found 0 tool_calls (model=${modelKey} provider=${provider}); markers=${markers.join(',') || 'none'}; head="${head}"`);
-                // v2.0.71 (#115) — fabricate detection on stream tail.
-                if (markers.length === 0) {
+                // v2.0.72 (#115 #120) — NLU intent recovery on stream
+                // tail. If model narrate-d a tool intent without
+                // emitting <tool_call> markup, extract + emit as
+                // tool_call delta so client agent loop doesn't break.
+                if (markers.length === 0 && declaredTools.length > 0) {
+                  const lastUser = latestRealUserText(messages) || '';
+                  const recovered = extractIntentFromNarrative(accText, declaredTools, { lastUserText: lastUser });
+                  if (recovered.length) {
+                    const recoveredCalls = recovered.map((r, i) => ({
+                      id: `nlu_${i}_${Date.now().toString(36)}`,
+                      name: r.name,
+                      argumentsJson: r.argumentsJson,
+                    }));
+                    const filtered = filterToolCallsByAllowlist(recoveredCalls, declaredTools);
+                    for (const rawTc of filtered) {
+                      const tc = sanitizeToolCall(repairToolCallArguments(rawTc, messages));
+                      const idx = collectedToolCalls.length;
+                      collectedToolCalls.push(tc);
+                      emitToolCallDelta(tc, idx);
+                    }
+                    if (filtered.length) {
+                      log.info(`Chat[stream]: NLU recovery — promoted ${filtered.length} narrative tool_call(s) mid-stream`);
+                    }
+                  }
+                }
+                // v2.0.71 (#115) — fabricate detection on stream tail
+                // (only if NLU didn't recover anything).
+                if (markers.length === 0 && collectedToolCalls.length === 0) {
                   const lastUser = latestRealUserText(messages) || '';
                   const fab = detectFabricatedToolResult(accText, { lastUserText: lastUser });
                   if (fab) {
