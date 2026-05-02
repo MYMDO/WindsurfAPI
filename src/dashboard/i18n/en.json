@@ -738,7 +738,8 @@
     "key": "API Key",
     "source": "Source",
     "importBtn": "Import",
-    "importSuccess": "Imported {{email}}"
+    "importSuccess": "Imported {{email}}",
+    "unavailable": "Available only on localhost deployments — \"local Windsurf\" on a remote server belongs to someone else's machine, not yours."
   },
 
   "account": {
@@ -831,6 +832,8 @@
     "refresh": "Refresh",
     "error": "Error",
     "loading": "Loading...",
+    "exportOk": "Downloaded {{filename}}",
+    "exportFailed": "Export failed",
     "enterHostPort": "Please enter host and port first",
     "experimentalEnabled": "Experimental feature enabled",
     "experimentalDisabled": "Experimental feature disabled",
@@ -893,7 +896,14 @@
     },
     "searchPlaceholder": "Search log content...",
     "clearView": "Clear View",
-    "viaSSE": "via SSE real-time streaming"
+    "viaSSE": "via SSE real-time streaming",
+    "export": {
+      "all": "All logs",
+      "api": "API request logs",
+      "system": "System runtime logs",
+      "txt": "Plain text",
+      "btn": "Download logs"
+    }
   },
 
   "model": {

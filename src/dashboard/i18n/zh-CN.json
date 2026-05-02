@@ -738,7 +738,8 @@
     "key": "API Key",
     "source": "来源",
     "importBtn": "导入",
-    "importSuccess": "已导入 {{email}}"
+    "importSuccess": "已导入 {{email}}",
+    "unavailable": "此功能仅在 localhost 部署可用 — 远端服务器上的 \"本地 Windsurf\" 是别人电脑上的，不是你电脑里的。"
   },
 
   "account": {
@@ -831,6 +832,8 @@
     "refresh": "已刷新",
     "error": "错误",
     "loading": "加载中...",
+    "exportOk": "已下载 {{filename}}",
+    "exportFailed": "导出失败",
     "enterHostPort": "请先填主机和端口",
     "experimentalEnabled": "已启用实验性功能",
     "experimentalDisabled": "已关闭实验性功能",
@@ -893,7 +896,14 @@
     },
     "searchPlaceholder": "搜索日志内容...",
     "clearView": "清空视图",
-    "viaSSE": "通过 SSE 实时流式接收"
+    "viaSSE": "通过 SSE 实时流式接收",
+    "export": {
+      "all": "全部日志",
+      "api": "API 请求日志",
+      "system": "系统运行日志",
+      "txt": "纯文本",
+      "btn": "下载日志"
+    }
   },
 
   "model": {

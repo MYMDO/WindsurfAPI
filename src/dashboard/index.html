@@ -1411,9 +1411,38 @@ tbody tr:hover td { background: var(--surface-2); }
 .contributor-card .summary-toggle summary:hover { color: var(--accent); }
 .contributor-card .summary { font-size: 13px; color: var(--text-muted); line-height: 1.65; margin-top: 6px; }
 .contributor-card .rarity-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.7px; font-family: var(--font-mono, ui-monospace, monospace); line-height: 1.5; }
+/* v2.0.60 — extended rarity ladder. Rarer = more dramatic visual:
+   GOD glows with animated rainbow (project creator only); MR pulses cyan;
+   LR has a cool prism gradient; UR keeps the existing fire palette. */
+.contributor-card .rarity-GOD {
+  background: linear-gradient(110deg, #ffd700 0%, #ff6b9d 25%, #c084fc 50%, #60a5fa 75%, #34d399 100%);
+  background-size: 220% 220%;
+  color: #1a1208;
+  text-shadow: 0 0 6px rgba(255,255,255,0.55);
+  font-weight: 900;
+  box-shadow: 0 0 0 1px rgba(255,215,0,0.55), 0 0 14px rgba(192,132,252,0.4);
+  animation: rarity-god-pulse 4s ease-in-out infinite;
+}
+@keyframes rarity-god-pulse {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.contributor-card .rarity-MR {
+  background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(139,92,246,0.45), 0 0 10px rgba(6,182,212,0.25);
+}
+.contributor-card .rarity-LR {
+  background: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #06b6d4 100%);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.42);
+}
 .contributor-card .rarity-UR { background: linear-gradient(135deg, #f5d06f, #e11d48 52%, #7c3aed); color: #fff; box-shadow: 0 0 0 1px rgba(225,29,72,0.28); }
 .contributor-card .rarity-SSR { background: linear-gradient(135deg, #f59e0b, #b45309); color: #fff7ed; box-shadow: 0 0 0 1px rgba(180,83,9,0.25); }
 .contributor-card .rarity-SR { background: var(--info-soft); color: var(--info); border: 1px solid rgba(59,130,246,0.28); }
+.contributor-card .rarity-R { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
 .contributor-card .contribution-count { font-size: 11px; color: var(--text-dim); padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; line-height: 1.5; }
 .contributor-card .history-list { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 8px; }
 .contributor-card .history-item { padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-2); }
@@ -1787,8 +1816,9 @@ window._firebaseOAuth = async function(provider) {
         <div class="field-hint" style="margin-top:4px" data-i18n="field.proxy.hint">留空则使用全局代理设置</div>
         <div class="field-row-actions">
           <button class="btn btn-primary" onclick="App.addAccount()" data-i18n="action.add">添加账号</button>
-          <button class="btn btn-outline" onclick="App.discoverLocalWindsurf()" data-i18n="action.importLocal" title="从本地 Windsurf 客户端读取已登录的凭证（仅本机访问）">从本地 Windsurf 导入</button>
+          <button id="local-import-btn" class="btn btn-outline" onclick="App.discoverLocalWindsurf()" data-i18n="action.importLocal" title="从本地 Windsurf 客户端读取已登录的凭证（仅本机访问）">从本地 Windsurf 导入</button>
         </div>
+        <div id="local-import-hint" style="margin-top:8px;color:var(--text-muted);font-size:12px;line-height:1.6"></div>
         <div id="local-windsurf-result" style="margin-top:12px"></div>
       </div>
     </div>
@@ -1971,6 +2001,19 @@ window._firebaseOAuth = async function(provider) {
         <span data-i18n="field.autoScroll">自动滚动</span>
       </label>
       <button class="btn btn-outline btn-sm" onclick="App.clearLogView()" data-i18n="log.clearView">清空视图</button>
+      <!-- v2.0.60 — log export. Type select drives which slice to dump
+           (api requests vs system housekeeping vs both); format selects
+           machine-readable jsonl vs human-readable txt. -->
+      <select id="log-export-type" class="select" style="width:130px">
+        <option value="all" data-i18n="log.export.all">全部日志</option>
+        <option value="api" data-i18n="log.export.api">API 请求日志</option>
+        <option value="system" data-i18n="log.export.system">系统运行日志</option>
+      </select>
+      <select id="log-export-format" class="select" style="width:120px">
+        <option value="jsonl">JSONL</option>
+        <option value="txt" data-i18n="log.export.txt">纯文本</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="App.exportLogs()" data-i18n="log.export.btn">下载日志</button>
     </div>
     <div class="log-container" id="log-container"></div>
   </section>
@@ -2947,7 +2990,12 @@ const App = {
   },
 
   // ─── Windsurf Login ──────────────────────────
-  loadWindsurfLogin() { this.renderLoginHistory(); },
+  loadWindsurfLogin() {
+    this.renderLoginHistory();
+    // v2.0.60 — preflight local-windsurf availability so the import
+    // button reflects the truth (disabled + hint on public bind).
+    this.checkLocalImportAvailability();
+  },
 
   async oauthLogin(provider) {
     const btn = document.getElementById(`oauth-${provider}-btn`);
@@ -3859,6 +3907,69 @@ const App = {
     else this.toast(this.translateError(r.error, 'toast.addFailed'), 'error');
   },
 
+  // v2.0.60 — preflight the local-windsurf availability so the dashboard
+  // doesn't surface a confusing 403 ERR_LOCAL_IMPORT_NOT_AVAILABLE_PUBLIC_BIND
+  // after the user clicks. Called from loadWindsurfLogin() / on panel
+  // open. Disables the button + shows a friendly hint when unavailable.
+  async checkLocalImportAvailability() {
+    const btn = document.getElementById('local-import-btn');
+    const hint = document.getElementById('local-import-hint');
+    if (!btn) return;
+    try {
+      const a = await this.api('GET', '/accounts/import-local-availability');
+      if (a.available) {
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+        if (hint) hint.textContent = '';
+        return;
+      }
+      btn.disabled = true;
+      btn.classList.add('disabled');
+      if (hint) {
+        hint.textContent = a.hint || I18n.t('localImport.unavailable');
+        hint.style.color = 'var(--text-muted)';
+        hint.style.fontSize = '12px';
+        hint.style.lineHeight = '1.6';
+      }
+    } catch (e) {
+      // If the new endpoint isn't there, leave the button as-is so older
+      // backends still work.
+    }
+  },
+
+  async exportLogs() {
+    const type = document.getElementById('log-export-type')?.value || 'all';
+    const fmt = document.getElementById('log-export-format')?.value || 'jsonl';
+    const level = document.getElementById('log-level')?.value || '';
+    try {
+      const params = new URLSearchParams({ type, format: fmt });
+      if (level) params.set('level', level);
+      const url = '/dashboard/api/logs/export?' + params.toString();
+      // Use fetch + blob so we can pass the X-Dashboard-Password header
+      // (raw <a download> can't set headers).
+      const resp = await fetch(url, {
+        headers: { 'X-Dashboard-Password': sessionStorage.getItem('dashboard_password') || '' },
+      });
+      if (!resp.ok) {
+        this.toast(I18n.t('toast.exportFailed') + ': HTTP ' + resp.status, 'error');
+        return;
+      }
+      const blob = await resp.blob();
+      const cd = resp.headers.get('Content-Disposition') || '';
+      const m = cd.match(/filename="([^"]+)"/);
+      const filename = m ? m[1] : `logs.${fmt}`;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 100);
+      this.toast(I18n.t('toast.exportOk', { filename }) || 'downloaded', 'success');
+    } catch (e) {
+      this.toast(I18n.t('toast.exportFailed') + ': ' + (e.message || ''), 'error');
+    }
+  },
+
   async discoverLocalWindsurf() {
     const root = document.getElementById('local-windsurf-result');
     if (!root) return;
@@ -4759,6 +4870,45 @@ const App = {
       if (m.requests && type === 'area') drawSmoothSeries(buckets.map(b => b.requests), this._chartColors.requests, { fill: true, thin: false });
     }
 
+    // v2.0.60 — hover crosshair: vertical line + highlight ring on the
+    // current bucket's bar, only after the entry animation finishes
+    // (p === 1) so it doesn't fight the growth tweens.
+    if (p === 1 && Number.isInteger(this._chartCursorIdx) && this._chartCursorIdx >= 0 && this._chartCursorIdx < buckets.length) {
+      const cx = xAt(this._chartCursorIdx);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(224,180,130,.42)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cx, pad.t);
+      ctx.lineTo(cx, pad.t + cH);
+      ctx.stroke();
+      ctx.restore();
+
+      const hb = buckets[this._chartCursorIdx];
+      const total = (m.success ? hb.success : 0) + (m.errors ? hb.errors : 0) || hb.requests;
+      if (total > 0) {
+        const yT = yAt(total);
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.beginPath();
+        ctx.arc(cx, yT, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(224,180,130,.85)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        // Empty bucket — small marker on baseline so user still sees they're hovering.
+        ctx.save();
+        ctx.fillStyle = 'rgba(224,180,130,.6)';
+        ctx.beginPath();
+        ctx.arc(cx, base, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
     // X-axis labels — smart step based on time span
     ctx.fillStyle = 'rgba(255,255,255,.38)';
     ctx.font = '500 10px "JetBrains Mono", "Consolas", monospace';
@@ -4799,6 +4949,10 @@ const App = {
       const y = ev.clientY - rect.top;
       if (x < hm.pad.l || x > hm.W - 8 || y < hm.pad.t || y > hm.pad.t + hm.cH) {
         tipEl.classList.remove('show');
+        if (this._chartCursorIdx !== -1) {
+          this._chartCursorIdx = -1;
+          this._paintChart(1);
+        }
         return;
       }
       let best = 0, bestD = Infinity;
@@ -4806,6 +4960,13 @@ const App = {
         const d = Math.abs(hm.xAt(i) - x);
         if (d < bestD) { bestD = d; best = i; }
       });
+      // v2.0.60 — repaint with cursor index when it changes, so the
+      // vertical crosshair "snaps" to the closest bucket as the mouse
+      // moves. Skip when index is unchanged to avoid wasted draws.
+      if (this._chartCursorIdx !== best) {
+        this._chartCursorIdx = best;
+        this._paintChart(1);
+      }
       const b = hm.buckets[best];
       const rate = b.requests > 0 ? ((b.success / b.requests) * 100).toFixed(1) : '—';
       const time = new Date(b.hour).toLocaleString();
@@ -4826,7 +4987,13 @@ const App = {
       tipEl.style.left = left + 'px';
       tipEl.style.top = top + 'px';
     });
-    canvas.addEventListener('mouseleave', () => { tipEl.classList.remove('show'); });
+    canvas.addEventListener('mouseleave', () => {
+      tipEl.classList.remove('show');
+      if (this._chartCursorIdx !== -1) {
+        this._chartCursorIdx = -1;
+        this._paintChart(1);
+      }
+    });
   },
 
   _bindPieHover() {
@@ -5384,12 +5551,24 @@ const App = {
     return this.CONTRIBUTORS_CACHE;
   },
   contributorRarity(weight) {
+    // v2.0.60 — three new tiers above the previous UR ceiling so the
+    // rarity ladder doesn't compress everyone past S+ into one badge.
+    //   GOD : project creator / maintainer (only dwgx)
+    //   MR  : "Mythic Rare" — multi-PR contributors above S+ (e.g.
+    //         baily-zhang has 4 ship-ready PRs spanning fingerprint /
+    //         dashboard / opus-multimodal — beyond a single S+ slot)
+    //   LR  : "Legendary Rare" — single S++ tier (reserved for
+    //         exceptional one-shot work that materially shifts arch)
+    if (weight === 'GOD') return 'GOD';
+    if (weight === 'MR') return 'MR';
+    if (weight === 'LR' || weight === 'S++') return 'LR';
     if (weight === 'S+') return 'UR';
     if (weight === 'S' || weight === 'A+') return 'SSR';
-    return 'SR';
+    if (weight === 'A' || weight === 'B+') return 'SR';
+    return 'R';
   },
   weightRank(w) {
-    return ({ 'S+': 6, 'S': 5, 'A+': 4, 'A': 3, 'B+': 2, 'B': 1 })[w] || 0;
+    return ({ 'GOD': 100, 'MR': 12, 'LR': 10, 'S++': 10, 'S+': 6, 'S': 5, 'A+': 4, 'A': 3, 'B+': 2, 'B': 1 })[w] || 0;
   },
   groupContributors(list) {
     const map = new Map();

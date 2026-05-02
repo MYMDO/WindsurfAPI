@@ -439,6 +439,36 @@ export async function handleDashboardApi(method, subpath, body, req, res) {
     }
   }
 
+  // GET /accounts/import-local-availability — v2.0.60: cheap probe so the
+  // dashboard can hide / disable the "Import from local Windsurf" button on
+  // public binds *before* the user clicks it. Returns the same gates the
+  // import endpoint enforces, plus a friendly explanation.
+  if (subpath === '/accounts/import-local-availability' && method === 'GET') {
+    const remote = req?.socket?.remoteAddress || '';
+    const localBind = isLocalBindHost();
+    const loopback = isLoopbackAddress(remote);
+    let available = true;
+    let reason = '';
+    if (!localBind) {
+      available = false;
+      reason = 'public_bind';
+    } else if (!loopback) {
+      available = false;
+      reason = 'non_loopback_caller';
+    }
+    return json(res, 200, {
+      available,
+      reason,
+      bindHost: process.env.HOST || process.env.BIND_HOST || '0.0.0.0',
+      remoteAddress: remote,
+      hint: available
+        ? ''
+        : (reason === 'public_bind'
+          ? '此实例绑定在公网/0.0.0.0 上 — "本地" Windsurf 是远端服务器上的，不是你电脑里的，所以这个功能被拒绝（设计如此）。要导入本机 Windsurf 凭证请用 localhost 部署。'
+          : '只接受来自 127.0.0.1 的请求；当前调用来自 ' + (remote || '?') + '。'),
+    });
+  }
+
   // GET /accounts/import-local — discover Windsurf desktop client credentials
   // Local-only hardening: must be bound to loopback host and remote socket
   // must also be loopback, so reverse proxies on public binds cannot
@@ -568,6 +598,60 @@ export async function handleDashboardApi(method, subpath, body, req, res) {
     return json(res, 200, { logs: getLogs(since, level) });
   }
 
+  // GET /logs/export — v2.0.60: download recent logs as JSONL or
+  // pretty-text. Filterable by `type` (all / system / api), `level`
+  // (debug/info/warn/error/all), `since` (unix ms). Designed for the
+  // "give me logs to attach to a GitHub issue" flow so users don't have
+  // to copy-paste from the streaming view. Returns Content-Disposition
+  // so browsers download instead of preview.
+  if (subpath === '/logs/export' && method === 'GET') {
+    const url = new URL(req.url, 'http://localhost');
+    const type = (url.searchParams.get('type') || 'all').toLowerCase();
+    const level = url.searchParams.get('level') || null;
+    const since = parseInt(url.searchParams.get('since') || '0', 10);
+    const fmt = (url.searchParams.get('format') || 'jsonl').toLowerCase();
+
+    let entries = getLogs(since, level);
+    if (type === 'api') {
+      // API path: any log emitted by request handlers — Probe[id] / Chat[id]
+      // / Cascade / ToolGuard / drought etc., plus any entry with a ctx
+      // requestId. This is the "what happened to my request" view.
+      entries = entries.filter(e => {
+        if (e.ctx && (e.ctx.requestId || e.ctx.reqId)) return true;
+        const m = e.msg || '';
+        return /^(?:Probe|Chat|Cascade|ToolGuard|ToolParser|drought|Workspace|Settings):|\[Probe |\[Chat /i.test(m);
+      });
+    } else if (type === 'system') {
+      // System path: everything that's NOT obviously per-request — auth
+      // pool, LS lifecycle, cron jobs, etc.
+      entries = entries.filter(e => {
+        if (e.ctx && (e.ctx.requestId || e.ctx.reqId)) return false;
+        const m = e.msg || '';
+        return !/^(?:Probe|Chat|Cascade|ToolGuard|ToolParser):|\[Probe |\[Chat /i.test(m);
+      });
+    }
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `windsurf-api-logs-${type}-${stamp}.${fmt === 'txt' ? 'log' : 'jsonl'}`;
+    let body;
+    if (fmt === 'txt' || fmt === 'log') {
+      body = entries.map(e => {
+        const ts = new Date(e.ts).toISOString();
+        const ctx = e.ctx ? ' ' + Object.entries(e.ctx).map(([k, v]) => `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`).join(' ') : '';
+        return `${ts} [${e.level.toUpperCase()}] ${e.msg}${ctx}`;
+      }).join('\n') + '\n';
+    } else {
+      body = entries.map(e => JSON.stringify(e)).join('\n') + '\n';
+    }
+    res.writeHead(200, {
+      'Content-Type': fmt === 'txt' || fmt === 'log' ? 'text/plain; charset=utf-8' : 'application/x-ndjson; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Cache-Control': 'no-store',
+    });
+    res.end(body);
+    return;
+  }
+
   if (subpath === '/logs/stream' && method === 'GET') {
     req.socket.setKeepAlive(true);
     req.setTimeout(0);
@@ -610,6 +694,58 @@ export async function handleDashboardApi(method, subpath, body, req, res) {
   // ─── Drought summary (v2.0.57 Fix 5) ──────────────────
   if (subpath === '/drought' && method === 'GET') {
     return json(res, 200, getDroughtSummary());
+  }
+
+  // ─── Upstream endpoints (v2.0.60 — show migration status) ──
+  // Surfaces which Windsurf upstream paths the proxy is currently
+  // wired to talk to. Lets the operator confirm at a glance that we're
+  // on the new register.windsurf.com / windsurf.com/_backend hosts and
+  // that the legacy fallbacks are still in place. Read-only — the
+  // actual switching happens automatically per-request based on
+  // network success / 5xx response.
+  if (subpath === '/upstream-endpoints' && method === 'GET') {
+    return json(res, 200, {
+      registerUser: {
+        primary: 'register.windsurf.com/exa.seat_management_pb.SeatManagementService/RegisterUser',
+        fallback: 'api.codeium.com/register_user/',
+        protocol: 'Connect-RPC (primary) / REST (fallback)',
+        migratedSince: 'v2.0.57',
+      },
+      postAuth: {
+        primary: 'windsurf.com/_backend/exa.seat_management_pb.SeatManagementService/WindsurfPostAuth',
+        fallback: 'server.self-serve.windsurf.com/exa.seat_management_pb.SeatManagementService/WindsurfPostAuth',
+        protocol: 'Connect-RPC',
+        migratedSince: 'v2.0.57',
+      },
+      oneTimeAuthToken: {
+        primary: 'windsurf.com/_backend/exa.seat_management_pb.SeatManagementService/GetOneTimeAuthToken',
+        fallback: 'server.self-serve.windsurf.com/exa.seat_management_pb.SeatManagementService/GetOneTimeAuthToken',
+        protocol: 'Connect-RPC',
+        migratedSince: 'v2.0.57',
+      },
+      checkUserLoginMethod: {
+        primary: 'windsurf.com/_backend/exa.seat_management_pb.SeatManagementService/CheckUserLoginMethod',
+        fallback: 'windsurf.com/_devin-auth/connections',
+        protocol: 'Connect-RPC',
+        migratedSince: 'v2.0.39',
+      },
+      getUserStatus: {
+        primary: 'server.codeium.com/exa.seat_management_pb.SeatManagementService/GetUserStatus',
+        fallback: 'server.self-serve.windsurf.com/exa.seat_management_pb.SeatManagementService/GetUserStatus',
+        protocol: 'Connect-RPC',
+        note: '内置 daily/weekly% 解析；wam-bundle 用的 GetPlanStatus 是同一 service 的另一个 RPC，返回字段被 GetUserStatus.planStatus 嵌套覆盖。',
+      },
+      getCascadeModelConfigs: {
+        primary: 'server.codeium.com/exa.api_server_pb.ApiServerService/GetCascadeModelConfigs',
+        fallback: 'server.self-serve.windsurf.com/exa.api_server_pb.ApiServerService/GetCascadeModelConfigs',
+        protocol: 'Connect-RPC',
+      },
+      firebaseAuth: {
+        primary: 'identitytoolkit.googleapis.com/v1/accounts:signInWithPassword',
+        refreshUrl: 'securetoken.googleapis.com/v1/token',
+        note: 'Windsurf project Firebase API key 直连 — 同 WindsurfSwitch / wam-bundle 路径。',
+      },
+    });
   }
 
   // ─── Credentials (v2.0.56 — runtime-rotatable API_KEY + DASHBOARD_PASSWORD) ─────
