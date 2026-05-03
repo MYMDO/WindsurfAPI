@@ -117,12 +117,22 @@ function normalizeSystemPromptForHash(s) {
     .replace(/(?<!\d)\d{4}-\d{2}-\d{2}(?!\d|T)/g, '<date>')
     // UUIDs (8-4-4-4-12 hex) — session/account ids, always
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>')
-    // Working directory lines (Claude Code prepends each turn)
-    .replace(/^[ \t]*[-•]?\s*(?:Working\s+directory|Current\s+working\s+directory|cwd|CWD)\s*[:：][^\n]*/gim, '$&'.replace(/[^:：]+$/, ' <cwd>'))
-    // "Current time:" / "Time:" lines
-    .replace(/^[ \t]*[-•]?\s*(?:Current\s+(?:date|time)|Time)\s*[:：][^\n]*/gim, '$&'.replace(/[^:：]+$/, ' <time>'))
+    // Working directory lines (Claude Code prepends each turn).
+    //
+    // v2.0.78 (audit H-3): the previous form
+    //   `'$&'.replace(/[^:：]+$/, ' <cwd>')`
+    // was a parse-time evaluation of `'$&'.replace(...)` which
+    // collapsed to the literal string `' <cwd>'` — every match was
+    // replaced by the bare placeholder, dropping the label too. Two
+    // sessions whose only label difference was `Working directory:`
+    // vs `cwd:` would hash identically (potential cross-session
+    // reuse). Now uses a real capture group so the label is
+    // preserved.
+    .replace(/(^[ \t]*[-•]?\s*(?:Working\s+directory|Current\s+working\s+directory|cwd|CWD)\s*[:：])[^\n]*/gim, '$1 <cwd>')
+    // "Current time:" / "Time:" lines (same fix as above)
+    .replace(/(^[ \t]*[-•]?\s*(?:Current\s+(?:date|time)|Time)\s*[:：])[^\n]*/gim, '$1 <time>')
     // Session ID lines (Claude Code 2.x emits these)
-    .replace(/^[ \t]*[-•]?\s*(?:Session\s*ID|sessionId|session_id)\s*[:：][^\n]*/gim, '<sessionid>')
+    .replace(/(^[ \t]*[-•]?\s*(?:Session\s*ID|sessionId|session_id)\s*[:：])[^\n]*/gim, '$1 <sessionid>')
     // Epoch timestamps in seconds (10 digits) or ms (13 digits) when
     // bare (not part of a longer number). Claude Code's status line and
     // some MCP servers emit these. 1700000000 (2023-11) to 2099999999

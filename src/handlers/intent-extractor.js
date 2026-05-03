@@ -93,6 +93,31 @@ function escapeRe(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// v2.0.78 (#120 follow-up + audit H-2): values extracted from narrative
+// can easily be a generic noun phrase ("a shell command", "the file",
+// "your input") or a literal placeholder keyword ("command",
+// "argument"). Both produce garbage tool_calls — the agent loop will
+// then try to execute `command` as a literal command, fail, and recurse.
+// Reject these uniformly across all three layers.
+const PLACEHOLDER_KEYWORDS = new Set([
+  'command', 'argument', 'arguments', 'param', 'parameter',
+  'parameters', 'input', 'value', 'file_path', 'filepath', 'path',
+  'query', 'string', 'text', 'name', 'arg', 'output',
+]);
+const ARTICLE_PREFIX_RE = /^(?:a|an|the|this|that|these|those|your|my|our|some|any|each|every)\s+/i;
+
+function looksLikePlaceholderValue(value) {
+  if (typeof value !== 'string' || !value.trim()) return true;
+  const v = value.trim();
+  // Strip trailing punctuation (`.`, `,`, `;`, `:`) before comparison.
+  const stripped = v.replace(/[.,;:!?]+$/, '');
+  if (PLACEHOLDER_KEYWORDS.has(stripped.toLowerCase())) return true;
+  // Article-led phrase ("a shell command", "the file") — model
+  // narrating about the call rather than supplying the call value.
+  if (ARTICLE_PREFIX_RE.test(stripped)) return true;
+  return false;
+}
+
 /**
  * Layer 1: explicit invocation syntax.
  *
@@ -108,6 +133,7 @@ function extractLayer1(text, names) {
   while ((m = reExplicit.exec(text)) !== null) {
     const [, fn, paramName, value] = m;
     if (!names.has(fn)) continue;
+    if (looksLikePlaceholderValue(value)) continue;
     const args = paramName ? { [paramName]: value } : { _value: value };
     out.push({
       name: fn,
@@ -152,6 +178,7 @@ function extractLayer2(text, names, primaryParam) {
       const a = tail.match(argRe);
       if (!a) continue;
       const value = a[1];
+      if (looksLikePlaceholderValue(value)) continue;
       const param = primaryParam.get(fn) || 'input';
       out.push({
         name: fn,
@@ -205,17 +232,13 @@ function extractLayer3(text, names, primaryParam) {
         if (a && a[1]) { value = a[1].trim(); break; }
       }
       if (!value) continue;
-      // v2.0.76 (#120 GLM-4.7 false positive seen in v2.0.75 e2e probe):
-      // model output sometimes contains the param keyword echoed inline
-      // e.g. "...with command 'command'", which made the regex capture
-      // the literal word "command" as the value. Reject when value is
-      // just the param keyword itself (or another generic placeholder).
-      const PLACEHOLDER_VALUES = new Set([
-        'command', 'argument', 'arguments', 'param', 'parameter',
-        'parameters', 'input', 'value', 'file_path', 'filepath', 'path',
-        'query', 'string', 'text', 'name', 'arg',
-      ]);
-      if (PLACEHOLDER_VALUES.has(value.toLowerCase())) continue;
+      // v2.0.76 + v2.0.78 (audit H-2): reject placeholder keywords
+      // (`command` / `argument` / ...) AND article-led prose phrases
+      // (`a shell command` / `the file` / `your input`). GLM-4.7
+      // narrative reproducer "to run a shell command" was capturing
+      // "a shell command." as the value pre-v2.0.78 even with the
+      // single-word filter in place.
+      if (looksLikePlaceholderValue(value)) continue;
       const param = primaryParam.get(fn) || 'input';
       out.push({
         name: fn,
@@ -252,13 +275,26 @@ export function extractIntentFromNarrative(text, tools, opts = {}) {
   if (!Array.isArray(tools) || !tools.length) return [];
   const lastUserText = opts.lastUserText || '';
   const minConfidence = typeof opts.minConfidence === 'number' ? opts.minConfidence : 0.65;
+  // v2.0.78 (audit H-4): when the parser saw a structured marker
+  // (xml_tag / fenced_json / openai_native / bare_json) but couldn't
+  // promote a call, the model meant to use the protocol — Layer 3
+  // narrative inference is dangerous here because it captures
+  // descriptive prose AROUND the malformed protocol token, not the
+  // intended args. Caller passes `opts.markers` (array of marker
+  // names from the chat handler's marker detector); when ANY of
+  // those markers fire AND `natural_lang` is NOT among them, skip
+  // Layer 3 so we only act on the explicit / backtick layers.
+  const markers = Array.isArray(opts.markers) ? opts.markers : [];
+  const STRUCTURAL_MARKERS = new Set(['xml_tag', 'fenced_json', 'openai_native', 'bare_json']);
+  const skipLayer3 = markers.some((m) => STRUCTURAL_MARKERS.has(m)) && !markers.includes('natural_lang');
+
   const { names, primaryParam } = indexTools(tools);
   if (!names.size) return [];
 
   const all = [
     ...extractLayer1(text, names),
     ...extractLayer2(text, names, primaryParam),
-    ...(userPromptLooksActionable(lastUserText) ? extractLayer3(text, names, primaryParam) : []),
+    ...(!skipLayer3 && userPromptLooksActionable(lastUserText) ? extractLayer3(text, names, primaryParam) : []),
   ];
   if (!all.length) return [];
 
@@ -272,7 +308,7 @@ export function extractIntentFromNarrative(text, tools, opts = {}) {
   }
   const recovered = [...byKey.values()].sort((a, b) => b.confidence - a.confidence);
   if (recovered.length) {
-    log.info(`NLU recovery: extracted ${recovered.length} tool_call(s) from narrative — ${recovered.map(t => `${t.name}@${t.layer}/${t.confidence.toFixed(2)}`).join(', ')}`);
+    log.info(`NLU recovery: extracted ${recovered.length} tool_call(s) from narrative — ${recovered.map(t => `${t.name}@${t.layer}/${t.confidence.toFixed(2)}`).join(', ')}${skipLayer3 ? ' (layer3-skipped: structural markers seen)' : ''}`);
   }
   return recovered;
 }

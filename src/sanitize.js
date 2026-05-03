@@ -75,7 +75,28 @@ const PATTERNS = [
   [/(?:[A-Za-z]:)?[/\\]home[/\\]user[/\\]projects[/\\]workspace-[a-z0-9]+(?:[/\\][^\s"'`<>)}\],*;]*)?/g, REDACTED_PATH],
   [/\/opt\/windsurf(?:[/\\][^\s"'`<>)}\],*;]*)?/g, REDACTED_PATH],
   [new RegExp(_repoRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:[/\\\\][^\\s"\'`<>)}\\],*;]*)?', 'g'), REDACTED_PATH],
+  // v2.0.78 (#108 zhangzhang-bit) — Cascade upstream injects these XML
+  // blocks into the system prompt to describe its sandbox state:
+  //   <workspace_information>...workspace path / metadata...</workspace_information>
+  //   <workspace_layout>...file tree...</workspace_layout>
+  //   <user_information>...account / config...</user_information>
+  // The model sometimes echoes them verbatim into its response, leaking
+  // server-internal sandbox state to API callers (the actual #108
+  // screenshot showed `workspace-devinxse` paths surrounded by these
+  // wrappers). Strip the entire block (greedy across newlines) — these
+  // are upstream-injected and have no legitimate reason to surface in
+  // client-facing output.
+  [/<workspace_information>[\s\S]*?<\/workspace_information>/gi, ''],
+  [/<workspace_layout>[\s\S]*?<\/workspace_layout>/gi, ''],
+  [/<user_information>[\s\S]*?<\/user_information>/gi, ''],
 ];
+
+// Tags whose ENTIRE block (open → close) is upstream-injected and must
+// be held back during streaming until we see the closing tag — otherwise
+// chunk N might emit `<workspace_information>file:///home/user/proj...`
+// before chunk N+1 arrives with the rest. Used by PathSanitizeStream
+// alongside SENSITIVE_LITERALS.
+const STRIP_BLOCK_TAGS = ['workspace_information', 'workspace_layout', 'user_information'];
 
 // Bare literals (no path tail) used by the streaming cut-point finder.
 // Listed once per separator/prefix shape so the partial-prefix detection
@@ -166,6 +187,39 @@ export class PathSanitizeStream {
       const maxLen = Math.min(lit.length - 1, len);
       for (let plen = maxLen; plen > 0; plen--) {
         if (buf.endsWith(lit.slice(0, plen))) {
+          const start = len - plen;
+          if (start < cut) cut = start;
+          break;
+        }
+      }
+    }
+
+    // (3) v2.0.78 (#108) — XML block strip-tags. If the buffer contains
+    // an open `<workspace_information>` (etc.) without its matching
+    // close tag yet, hold the cut at the open-tag start so the next
+    // delta can extend the block; we only emit it once we see </tag>.
+    // Also handle the partial-prefix case where buffer ends with
+    // `<workspace_inform` (still being typed by the model).
+    for (const tag of STRIP_BLOCK_TAGS) {
+      const open = `<${tag}`;
+      const close = `</${tag}>`;
+      let searchFrom = 0;
+      while (searchFrom < len) {
+        const openIdx = buf.indexOf(open, searchFrom);
+        if (openIdx === -1) break;
+        const closeIdx = buf.indexOf(close, openIdx + open.length);
+        if (closeIdx === -1) {
+          // No close yet — hold from openIdx so the next feed can
+          // accumulate more of the block before we emit.
+          if (openIdx < cut) cut = openIdx;
+          break;
+        }
+        searchFrom = closeIdx + close.length;
+      }
+      // Partial-prefix tail of the open tag (`<workspace_inform`).
+      const openMax = Math.min(open.length - 1, len);
+      for (let plen = openMax; plen > 0; plen--) {
+        if (buf.endsWith(open.slice(0, plen))) {
           const start = len - plen;
           if (start < cut) cut = start;
           break;
