@@ -13,7 +13,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractIntentFromNarrative } from '../src/handlers/intent-extractor.js';
+import { extractIntentFromNarrative, detectToolIntentInNarrative } from '../src/handlers/intent-extractor.js';
 import { buildToolPreambleForProto } from '../src/handlers/tool-emulation.js';
 
 const fnTool = (name, props = { command: 'string' }, required = ['command']) => ({
@@ -140,6 +140,48 @@ describe('English Layer 3 still works (regression guard)', () => {
     );
     assert.equal(r.length, 1);
     assert.deepEqual(JSON.parse(r[0].argumentsJson), { command: 'echo HELLO' });
+  });
+});
+
+describe('detectToolIntentInNarrative — gates the v2.0.82 retry loop', () => {
+  it('detects #125 GLM-5.1 reproducer "让我用 Bash 来列出..."', () => {
+    const r = detectToolIntentInNarrative(
+      "让我用 Bash 来列出当前工作目录下的文件",
+      [BASH], { lastUserText: '看看本地有哪些文件' },
+    );
+    assert.equal(r, 'Bash');
+  });
+
+  it('detects English "I should call shell_exec"', () => {
+    const r = detectToolIntentInNarrative(
+      "I should call shell_exec to list things.",
+      [SHELL], { lastUserText: 'list things' },
+    );
+    assert.equal(r, 'shell_exec');
+  });
+
+  it('returns null when no tool name in narrative', () => {
+    const r = detectToolIntentInNarrative(
+      "I'll just answer directly.",
+      [SHELL], { lastUserText: 'list things' },
+    );
+    assert.equal(r, null);
+  });
+
+  it('returns null when user prompt is not actionable', () => {
+    const r = detectToolIntentInNarrative(
+      "I should call shell_exec.",
+      [SHELL], { lastUserText: '今天天气怎么样' },
+    );
+    assert.equal(r, null);
+  });
+
+  it('returns null when no verb signals tool intent', () => {
+    const r = detectToolIntentInNarrative(
+      "shell_exec is an interesting function.",
+      [SHELL], { lastUserText: 'tell me about shell_exec' },
+    );
+    assert.equal(r, null);
   });
 });
 

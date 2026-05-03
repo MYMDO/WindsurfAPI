@@ -10,7 +10,7 @@ import { resolveModel, getModelInfo } from '../models.js';
 import { getLsFor, ensureLs } from '../langserver.js';
 import { config, log } from '../config.js';
 import { recordRequest, recordTokenUsage } from '../dashboard/stats.js';
-import { extractIntentFromNarrative } from './intent-extractor.js';
+import { extractIntentFromNarrative, detectToolIntentInNarrative } from './intent-extractor.js';
 import { markRequest as markQuietWindowRequest } from '../dashboard/quiet-window-updater.js';
 import { isModelAllowed } from '../dashboard/model-access.js';
 import { cacheKey, cacheGet, cacheSet } from '../cache.js';
@@ -2102,6 +2102,81 @@ async function nonStreamResponse(client, id, created, model, modelKey, messages,
                 toolCalls = filtered;
                 allText = '';
                 allThinking = '';
+              }
+            }
+          }
+          // v2.0.82 (#125) — translator-layer retry-with-correction.
+          // When NLU recovery can't lift a tool_call AND the narrative
+          // clearly intended one (mentions a declared tool name + an
+          // action verb + user prompt is actionable), spend one extra
+          // cascade round-trip with the model's prior narrate folded
+          // into history + a correction prompt asking it to re-emit
+          // using the protocol. GLM-5.1 / Kimi-K2 narrate-without-
+          // args case (#125 DuZunTianXia) goes from 0 tool_calls to
+          // a real protocol emit on the second pass.
+          //
+          // Default OFF — burns 2x account quota when active. Operator
+          // opts in via WINDSURFAPI_NLU_RETRY=1.
+          if (toolCalls.length === 0
+              && process.env.WINDSURFAPI_NLU_RETRY === '1'
+              && Array.isArray(tools) && tools.length > 0
+              && narrativeSource) {
+            const lastUser = latestRealUserText(messages) || '';
+            const intendedTool = detectToolIntentInNarrative(narrativeSource, tools, { lastUserText: lastUser });
+            if (intendedTool) {
+              try {
+                // Build correction history. The cascade backend treats
+                // the assistant turn as a "previous response" the model
+                // can read, then the user turn frames the correction.
+                // Bilingual phrasing because GLM/Kimi often run on
+                // Chinese system prompts.
+                const correctionMessages = [
+                  ...cascadeMessages,
+                  { role: 'assistant', content: narrativeSource.slice(0, 4000) },
+                  { role: 'user', content:
+                    `Your previous response described intending to call \`${intendedTool}\` but didn't emit the tool-call protocol block. ` +
+                    `Re-emit the call now using the EXACT protocol format defined at the top of this conversation. ` +
+                    `Do NOT narrate. Do NOT describe. Just the protocol block. ` +
+                    `Provide a concrete argument value (the literal command / file path / query) — never placeholders like "command" or "the file". ` +
+                    `\n\n你刚才描述了想用 \`${intendedTool}\` 工具但没按协议格式 emit。请直接重新 emit 协议块，不要 narrate。给具体的 argument 字面值（如 ls / /etc/hostname / "echo hi"），不要写"命令" / "文件" 这种占位词。` },
+                ];
+                log.info(`Chat[non-stream]: NLU retry — first pass narrate-only, retrying with correction (tool=${intendedTool} markers=${markers.join(',') || 'none'})`);
+                const retryChunks = await client.cascadeChat(correctionMessages, modelEnum, modelUid, {
+                  reuseEntry: null,
+                  toolPreamble: nativeBridgeOn ? '' : toolPreamble,
+                  displayModel: model,
+                  nativeMode: nativeBridgeOn,
+                  nativeAllowlist: nativeOpts?.allowlist || null,
+                  additionalSteps: nativeOpts?.additionalSteps || null,
+                });
+                let retryText = '';
+                let retryThinking = '';
+                for (const c of retryChunks) {
+                  if (c.text) retryText += c.text;
+                  if (c.thinking) retryThinking += c.thinking;
+                }
+                const retryParsed = parseToolCallsFromText(retryText, { modelKey, provider, route });
+                let retryCalls = filterToolCallsByAllowlist(retryParsed.toolCalls || [], tools);
+                if (!retryCalls.length) {
+                  const retrySource = retryText.trim() ? retryText : retryThinking;
+                  const recovered2 = extractIntentFromNarrative(retrySource, tools, { lastUserText: lastUser });
+                  if (recovered2.length) {
+                    retryCalls = filterToolCallsByAllowlist(
+                      recovered2.map((r, i) => ({ id: `nlu_retry_${i}_${Date.now().toString(36)}`, name: r.name, argumentsJson: r.argumentsJson })),
+                      tools,
+                    );
+                  }
+                }
+                if (retryCalls.length) {
+                  log.info(`Chat[non-stream]: NLU retry — promoted ${retryCalls.length} tool_call(s) on second pass (tool=${intendedTool})`);
+                  toolCalls = retryCalls;
+                  allText = retryParsed.text || '';
+                  allThinking = '';
+                } else {
+                  log.warn(`Chat[non-stream]: NLU retry — second pass also produced 0 tool_calls; giving up (model=${modelKey})`);
+                }
+              } catch (retryErr) {
+                log.warn(`Chat[non-stream]: NLU retry failed: ${retryErr.message}`);
               }
             }
           }

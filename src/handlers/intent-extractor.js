@@ -296,6 +296,36 @@ function userPromptLooksActionable(lastUserText) {
 }
 
 /**
+ * Detect whether the model's narrative looks like it INTENDED to call
+ * a tool (mentions a declared tool name, mentions a verb, user prompt
+ * is actionable) but never produced a usable extraction. Used to gate
+ * the retry-with-correction loop in chat.js — we only burn an extra
+ * cascade round-trip when there's clear tool intent we couldn't
+ * recover.
+ *
+ * Returns the matching tool name on hit, null otherwise.
+ *
+ * v2.0.82 (#125 — proper translator layer beyond NLU).
+ */
+export function detectToolIntentInNarrative(text, tools, opts = {}) {
+  if (typeof text !== 'string' || !text.trim()) return null;
+  if (!Array.isArray(tools) || !tools.length) return null;
+  const lastUserText = opts.lastUserText || '';
+  if (!userPromptLooksActionable(lastUserText)) return null;
+  const { names } = indexTools(tools);
+  if (!names.size) return null;
+  // Verb forms (English + Chinese) that signal "I'm about to call X".
+  const verbPattern = /\b(?:call|invoke|run|use|execute|exec|trigger|fire|going to|will|let me|i'?ll|i'?m going)\b|(?:调用|使用|运行|执行|触发|启动|让我|我会|我将|准备|打算|想要|需要)/i;
+  if (!verbPattern.test(text)) return null;
+  // Find the first declared tool name mentioned in text.
+  for (const fn of names) {
+    const fnRe = new RegExp(`\\b${escapeRe(fn)}\\b|\\\`${escapeRe(fn)}\\\``);
+    if (fnRe.test(text)) return fn;
+  }
+  return null;
+}
+
+/**
  * Top-level extractor. Returns a deduped, confidence-sorted list of
  * extracted tool_calls. Empty array when nothing is recoverable.
  *
