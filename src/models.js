@@ -316,6 +316,17 @@ const ANTHROPIC_DATED = {
   'claude-haiku-4-5':           'claude-4.5-haiku',
   'claude-haiku-4-5-20251001':  'claude-4.5-haiku',
   'claude-haiku-4-5-latest':    'claude-4.5-haiku',
+  // v2.0.85: README + every recent reply uses the dotted form
+  // `claude-haiku-4.5` (mirrors `claude-sonnet-4.6`). Alias both
+  // dotted and dashed so users following the docs verbatim don't hit
+  // 400 model_not_found.
+  'claude-haiku-4.5':           'claude-4.5-haiku',
+  'claude-haiku-4.5-latest':    'claude-4.5-haiku',
+  // Sonnet 4.5 dotted-suffix variants for the same reason.
+  'claude-sonnet-4.5':          'claude-4.5-sonnet',
+  'claude-sonnet-4.5-thinking': 'claude-4.5-sonnet-thinking',
+  'claude-opus-4.5':            'claude-4.5-opus',
+  'claude-opus-4.5-thinking':   'claude-4.5-opus-thinking',
   // Legacy Haiku dated names — Anthropic SDK clients sometimes still
   // ship these. Map to the closest live model (4.5-haiku) so the request
   // doesn't 400; the `deprecated` flag isn't set on 4.5-haiku so it
