@@ -2089,7 +2089,7 @@ async function nonStreamResponse(client, id, created, model, modelKey, messages,
           // got 0 tool_calls back.
           if (Array.isArray(tools) && tools.length > 0) {
             const lastUser = latestRealUserText(messages) || '';
-            const recovered = extractIntentFromNarrative(narrativeSource, tools, { lastUserText: lastUser });
+            const recovered = extractIntentFromNarrative(narrativeSource, tools, { lastUserText: lastUser, markers });
             if (recovered.length) {
               const recoveredCalls = recovered.map((r, i) => ({
                 id: `nlu_${i}_${Date.now().toString(36)}`,
@@ -2792,7 +2792,7 @@ function streamResponse(id, created, model, modelKey, provider, messages, cascad
                 // (mirrors the non-stream path).
                 if (declaredTools.length > 0) {
                   const lastUser = latestRealUserText(messages) || '';
-                  const recovered = extractIntentFromNarrative(accNarrative, declaredTools, { lastUserText: lastUser });
+                  const recovered = extractIntentFromNarrative(accNarrative, declaredTools, { lastUserText: lastUser, markers });
                   if (recovered.length) {
                     const recoveredCalls = recovered.map((r, i) => ({
                       id: `nlu_${i}_${Date.now().toString(36)}`,
