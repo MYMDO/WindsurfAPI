@@ -535,9 +535,13 @@ export function cleanupOrphanLanguageServers() {
       const pid = parseInt(m[1], 10);
       const argv = m[2];
       // Match either the configured binary path OR the default path.
+      // v2.0.88 (audit L-1): anchor the match to argv[0] so we don't
+      // SIGTERM a `grep language_server_linux_x64` or a monitoring
+      // agent whose argv mentions our binary path elsewhere.
+      const argv0 = argv.split(/\s+/, 1)[0];
       let isOurs = false;
       for (const bin of targetBinaries) {
-        if (bin && argv.includes(bin)) { isOurs = true; break; }
+        if (bin && argv0 === bin) { isOurs = true; break; }
       }
       if (!isOurs) continue;
       scanned++;
@@ -575,6 +579,53 @@ export function stopLanguageServer() {
         m.invalidateFor({ lsPort: p.port, lsGeneration: p.generation });
       }
     }).catch(() => {});
+  }
+}
+
+/**
+ * v2.0.88 (audit H-4): like `stopLanguageServer` but waits for each
+ * spawned LS process to actually exit (capped per-process timeout)
+ * before returning. Used by `dashboard /self-update` so `process.exit`
+ * doesn't fire while children still hold their ports — preventing
+ * orphan LS processes that would otherwise win a port-conflict race
+ * against the freshly-restarted parent.
+ *
+ * Per-process wait cap defaults to 1.5s; total wait for many LSes is
+ * bounded by Promise.allSettled. SIGKILL fallback if SIGTERM doesn't
+ * land within the cap.
+ */
+export async function stopLanguageServerAndWait({ perProcessTimeoutMs = 1500 } = {}) {
+  const procs = [];
+  const portsToClose = [];
+  for (const [key, entry] of _pool) {
+    if (entry?.process) procs.push({ key, proc: entry.process });
+    if (entry?.port) portsToClose.push({ port: entry.port, generation: entry.generation });
+  }
+  _pool.clear();
+  await Promise.allSettled(procs.map(({ key, proc }) => new Promise((resolve) => {
+    let settled = false;
+    const finish = (how) => {
+      if (settled) return;
+      settled = true;
+      log.info(`LS instance ${key} stopped (${how})`);
+      resolve();
+    };
+    try { proc.once('exit', () => finish('exited')); } catch {}
+    try { proc.kill('SIGTERM'); } catch (e) { finish(`kill failed: ${e.message}`); return; }
+    setTimeout(() => {
+      if (settled) return;
+      try { proc.kill('SIGKILL'); } catch {}
+      finish(`SIGKILL after ${perProcessTimeoutMs}ms`);
+    }, perProcessTimeoutMs).unref();
+  })));
+  if (portsToClose.length) {
+    try {
+      const m = await import('./conversation-pool.js');
+      for (const p of portsToClose) {
+        closeSessionForPort(p.port);
+        m.invalidateFor({ lsPort: p.port, lsGeneration: p.generation });
+      }
+    } catch {}
   }
 }
 

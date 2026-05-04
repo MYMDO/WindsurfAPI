@@ -1224,17 +1224,35 @@ export function shouldAutoFallback(body, context, result) {
 }
 
 export async function handleChatCompletions(body, context = {}) {
-  const result = await _handleChatCompletionsInner(body, context);
+  // v2.0.88 (audit H-3) — compute original cache key BEFORE any
+  // fallback rewrite. We pass it into the inner via context so a
+  // successful fallback writes into the cache slot the NEXT identical
+  // original-model request will look up, instead of the fallback-model
+  // slot that the next request will miss.
+  const originalCkey = cacheKey(body, context.callerKey || body.__callerKey || '');
+  const result = await _handleChatCompletionsInner(body, { ...context, __originalCkey: originalCkey });
   if (shouldAutoFallback(body, context, result)) {
+    // v2.0.88 (audit H-1) — `body.model` is the RAW request string; the
+    // inner handler resolves it through mergeReasoningEffortIntoModel +
+    // resolveModel before computing fingerprints. If the client sends
+    // `model: claude-opus-4-7` + `reasoning_effort: max` (codex CLI
+    // pattern), `body.model` alone is `claude-opus-4-7`, but the
+    // routingModelKey used for cascade-pool fingerprints is the merged
+    // `claude-opus-4-7-max`. Passing raw `body.model` as
+    // `__aliasModelKey` would fingerprint to a slot the next turn
+    // never queries — silently re-introducing the v2.0.86 regression
+    // for any client that separates effort from model name.
+    const originalRoutingKey = resolveModel(mergeReasoningEffortIntoModel(body.model, body));
     const originalModel = body.model;
     const fallbackModel = result.body.error.fallback_model;
-    log.info(`auto-fallback: ${originalModel} → ${fallbackModel} (whole pool rate_limited)`);
+    log.info(`auto-fallback: ${originalModel} → ${fallbackModel} (alias-key=${originalRoutingKey} whole pool rate_limited)`);
     const fallbackResult = await _handleChatCompletionsInner(
       { ...body, model: fallbackModel },
-      // __aliasModelKey carries the ORIGINAL model name into the
-      // inner handler so the cascade pool checkin can dual-index
-      // the entry — fixes #129 reuse miss after fallback.
-      { ...context, __fallbackAttempt: true, __aliasModelKey: originalModel },
+      // __aliasModelKey carries the resolved/merged ORIGINAL routing
+      // key so cascade pool dual-index hits the slot the next turn
+      // will actually look up. __originalCkey threads through so
+      // cacheSet writes also go to the original-model cache slot.
+      { ...context, __fallbackAttempt: true, __aliasModelKey: originalRoutingKey, __originalCkey: originalCkey },
     );
     // Restore original model id in the response body so client code
     // matching on `response.model === requested model` still works.
@@ -1242,12 +1260,17 @@ export async function handleChatCompletions(body, context = {}) {
       if (typeof fallbackResult.body === 'object' && 'model' in fallbackResult.body) {
         fallbackResult.body.model = originalModel;
       }
-      // Surface the actual served model in a sibling field for log /
-      // billing purposes (cascade_breakdown style — non-OpenAI but
-      // documented).
+      // v2.0.88 (audit M-5): nest under usage.cascade_breakdown
+      // instead of body root. OpenAI ChatCompletion top-level fields
+      // are spec'd; pydantic v2 with `extra='forbid'` (used by some
+      // strict client SDKs) rejected our root-level `served_model`.
+      // cascade_breakdown is already an accepted non-standard sibling
+      // inside `usage`, so served_model + fallback_reason ride along.
       if (typeof fallbackResult.body === 'object' && !fallbackResult.body.error) {
-        fallbackResult.body.served_model = fallbackModel;
-        fallbackResult.body.fallback_reason = 'rate_limit_auto_fallback';
+        const usage = fallbackResult.body.usage = fallbackResult.body.usage || {};
+        const cb = usage.cascade_breakdown = usage.cascade_breakdown || {};
+        cb.served_model = fallbackModel;
+        cb.fallback_reason = 'rate_limit_auto_fallback';
       }
     }
     return fallbackResult;
@@ -1938,6 +1961,13 @@ async function _handleChatCompletionsInner(body, context = {}) {
       modelInfo?.provider || null,
       emulateTools, toolPreamble, wantJson, cachePolicy, wantThinking, tools, body.__route || 'chat',
       nativeOpts,
+      // v2.0.88 (audit H-3) — when this is the inner-pass of an auto-
+      // fallback retry, the outer wrapper threads the ORIGINAL request's
+      // ckey through context.__originalCkey. We pass it down so the
+      // success-path cacheSet writes under the original key as well —
+      // next identical original-model request hits cache instead of
+      // re-burning the rate-limit + fallback cycle.
+      context.__originalCkey || null,
     );
     if (result.status === 200) return result;
     reuseEntry = null; // don't try to reuse on the retry
@@ -2051,7 +2081,7 @@ async function _handleChatCompletionsInner(body, context = {}) {
   return lastErr || { status: 503, body: { error: { message: 'No active accounts available', type: 'pool_exhausted' } } };
 }
 
-async function nonStreamResponse(client, id, created, model, modelKey, messages, cascadeMessages, modelEnum, modelUid, useCascade, apiKey, ckey, poolCtx, provider, emulateTools, toolPreamble, wantJson = false, cachePolicy = null, wantThinking = false, tools = [], route = 'chat', nativeOpts = null) {
+async function nonStreamResponse(client, id, created, model, modelKey, messages, cascadeMessages, modelEnum, modelUid, useCascade, apiKey, ckey, poolCtx, provider, emulateTools, toolPreamble, wantJson = false, cachePolicy = null, wantThinking = false, tools = [], route = 'chat', nativeOpts = null, aliasCkey = null) {
   const startTime = Date.now();
   const nativeBridgeOn = !!nativeOpts?.enabled;
   try {
@@ -2377,7 +2407,19 @@ async function nonStreamResponse(client, id, created, model, modelKey, messages,
     // responses — they're inherently contextual and the cache doesn't
     // preserve the tool_calls array, so a cache hit would return a
     // content-only response with finish_reason:stop, breaking tool flow.
-    if (ckey && !toolCalls.length) cacheSet(ckey, { text: allText, thinking: allThinking });
+    //
+    // v2.0.88 (audit H-3) — when this is the inner-pass of an
+    // auto-fallback retry, ALSO cacheSet under the original-model
+    // ckey (passed as aliasCkey by the outer wrapper). Otherwise the
+    // next identical original-model request misses cache and re-
+    // triggers the rate_limit + fallback cycle, burning cascade
+    // quota for the whole rate-limit window.
+    if (ckey && !toolCalls.length) {
+      cacheSet(ckey, { text: allText, thinking: allThinking });
+      if (aliasCkey && aliasCkey !== ckey) {
+        cacheSet(aliasCkey, { text: allText, thinking: allThinking });
+      }
+    }
 
     const message = { role: 'assistant', content: allText || null };
     if (allThinking) message.reasoning_content = allThinking;

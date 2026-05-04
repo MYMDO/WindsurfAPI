@@ -378,8 +378,12 @@ export async function handleDashboardApi(method, subpath, body, req, res) {
         setTimeout(async () => {
           log.info('self-update: stopping LS pool before exit');
           try {
+            // v2.0.88 (audit H-4): use the await-and-wait variant so
+            // SIGTERM has time to land before process.exit reparents
+            // surviving children to init. Otherwise the new PM2-spawned
+            // process races with an orphan LS holding the same port.
             const m = await import('../langserver.js');
-            m.stopLanguageServer();
+            await m.stopLanguageServerAndWait({ perProcessTimeoutMs: 1500 });
           } catch (e) {
             log.warn(`self-update: stopLanguageServer failed: ${e.message}`);
           }

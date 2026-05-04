@@ -595,8 +595,13 @@ export function checkin(fingerprint, entry, callerKey = '', ttlHintMs) {
       lastAccess: now,
       ...(Number.isFinite(resolvedHint) && resolvedHint > 0 ? { ttlHintMs: resolvedHint } : {}),
     });
-    stats.stores++;
   }
+  // v2.0.88 (audit M-1): count once per logical checkin (one
+  // conversation), not once per fingerprint slot. Otherwise the
+  // dashboard's "stores" counter doubles whenever auto-fallback fires
+  // and operators read pool efficiency wrong.
+  stats.stores++;
+  if (fingerprints.length > 1) stats.aliasWrites = (stats.aliasWrites || 0) + (fingerprints.length - 1);
   prune(now);
 }
 
@@ -607,17 +612,39 @@ export function checkin(fingerprint, entry, callerKey = '', ttlHintMs) {
  */
 export function invalidateFor({ apiKey, lsPort, lsGeneration } = {}) {
   let dropped = 0;
+  // v2.0.88 (audit H-2) — two-pass scan. v2.0.87 dual-write checkin
+  // can index the same cascadeId under multiple fingerprint slots.
+  // The previous single-pass `if (lsPort) delete` would only drop the
+  // first slot it scanned; if the per-port scan iterated past a sibling
+  // slot under different ordering, that slot stayed in the pool
+  // pointing to a now-dead cascadeId on a now-restarted LS. Next turn
+  // would hit `cascade not found`, set reuseEntryDead, and force a
+  // full history replay — silent one-turn failure on every LS restart.
+  // Pass 1: collect every cascadeId tied to the going-away tuple.
+  // Pass 2: drop every slot pointing at any of those cascadeIds.
+  const targetCascadeIds = new Set();
+  for (const [, e] of _pool) {
+    let hit = false;
+    if (apiKey && e.apiKey === apiKey) hit = true;
+    if (!hit && lsPort && e.lsPort === lsPort) {
+      if (lsGeneration == null || e.lsGeneration == null || e.lsGeneration === lsGeneration) hit = true;
+    }
+    if (hit && e.cascadeId) targetCascadeIds.add(e.cascadeId);
+  }
   for (const [fp, e] of _pool) {
-    if (apiKey && e.apiKey === apiKey) { _pool.delete(fp); dropped++; continue; }
-    if (lsPort && e.lsPort === lsPort) {
-      // When generation is supplied on both sides, only drop entries for the
-      // SAME generation — lets a same-port LS replace the old one without
-      // nuking healthy entries from the new one. When either side lacks a
-      // generation tag, fall back to port-only matching for safety.
-      if (lsGeneration == null || e.lsGeneration == null || e.lsGeneration === lsGeneration) {
-        _pool.delete(fp);
-        dropped++;
-      }
+    let drop = false;
+    if (apiKey && e.apiKey === apiKey) drop = true;
+    if (!drop && lsPort && e.lsPort === lsPort) {
+      if (lsGeneration == null || e.lsGeneration == null || e.lsGeneration === lsGeneration) drop = true;
+    }
+    // Sibling-cleanup: any slot pointing at a cascadeId we already
+    // decided to drop must also go, even if its own apiKey/lsPort
+    // happens not to match (e.g. an alias slot whose apiKey was set
+    // from the entry instead of the going-away account).
+    if (!drop && e.cascadeId && targetCascadeIds.has(e.cascadeId)) drop = true;
+    if (drop) {
+      _pool.delete(fp);
+      dropped++;
     }
   }
   return dropped;
