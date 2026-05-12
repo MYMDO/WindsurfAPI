@@ -24,12 +24,27 @@ const DEFAULT_CSRF = 'windsurf-api-csrf-fixed-token';
 const DEFAULT_API_URL = 'https://server.self-serve.windsurf.com';
 const DEFAULT_LINUX_DATA_ROOT = '/opt/windsurf/data';
 
+// Auto-restart configuration (env-overridable)
+const AUTO_RESTART_ENABLED = process.env.LS_AUTO_RESTART !== '0'; // default: on
+const AUTO_RESTART_MAX_RETRIES = (() => {
+  const n = parseInt(process.env.LS_AUTO_RESTART_MAX_RETRIES || '', 10);
+  return Number.isFinite(n) && n > 0 ? n : 3;
+})();
+const AUTO_RESTART_BASE_DELAY_MS = (() => {
+  const n = parseInt(process.env.LS_AUTO_RESTART_BASE_DELAY_MS || '', 10);
+  return Number.isFinite(n) && n > 0 ? n : 1000;
+})();
+
 // Pool: key -> { process, port, csrfToken, proxy, startedAt, ready }
 const _pool = new Map();
 // In-flight Promise map so two concurrent ensureLs(proxy) calls for the
 // same key share one spawn + readiness wait. Without this, both callers
 // would each spawn an LS process, race on the port, and leave an orphan.
 const _pending = new Map();
+// Track which LS keys are being shut down intentionally so the exit handler
+// doesn't fire an auto-restart for them. Without this, stopLanguageServer()
+// and restartLsForProxy() would trigger unwanted respawns.
+const _intentionalShutdown = new Set();
 let _nextPort = DEFAULT_PORT + 1;
 let _binaryPath = DEFAULT_BINARY;
 let _apiServerUrl = DEFAULT_API_URL;
@@ -354,17 +369,23 @@ export async function ensureLs(proxy = null) {
         log.error('  4. Port already in use — check: lsof -i :' + port);
       }
       const gone = _pool.get(key);
+      const goneGen = gone?.generation;
+      const gonePort = gone?.port;
       _pool.delete(key);
-      if (gone?.port) {
-        // Drop the pooled HTTP/2 session so the next request to the
-        // replacement LS opens a fresh one instead of writing into a
-        // dead socket (grpc.js caches one session per port).
-        closeSessionForPort(gone.port);
-        // v2.0.25 LOW-1: pass the dead LS's generation so a new LS that
-        // already came up on the same port keeps its entries.
-        const goneGen = gone.generation;
-        import('./conversation-pool.js').then(m => m.invalidateFor({ lsPort: gone.port, lsGeneration: goneGen })).catch(() => {});
+      if (gonePort) {
+        closeSessionForPort(gonePort);
+        import('./conversation-pool.js').then(m => m.invalidateFor({ lsPort: gonePort, lsGeneration: goneGen })).catch(() => {});
       }
+
+      // Auto-restart: respawn the LS after a brief backoff so pending
+      // requests don't fail with ECONNRESET. Respects the retry cap and
+      // tracks per-key restart attempts to avoid infinite loops on
+      // permanent errors (e.g. missing binary, incompatible arch).
+      // Skip when the exit was intentional (stopLanguageServer / restartLsForProxy).
+      if (AUTO_RESTART_ENABLED && gone && !_intentionalShutdown.has(key)) {
+        scheduleLsRestart(key, gone.proxy, gonePort);
+      }
+      _intentionalShutdown.delete(key);
     });
     proc.on('error', (err) => {
       if (err.code === 'ENOEXEC') {
@@ -427,6 +448,7 @@ export async function ensureLs(proxy = null) {
 export async function restartLsForProxy(proxy) {
   const key = proxyKey(proxy);
   const entry = _pool.get(key);
+  _intentionalShutdown.add(key);  // prevent auto-restart
   if (entry?.process) {
     try { entry.process.kill('SIGTERM'); } catch {}
   }
@@ -454,6 +476,45 @@ export async function restartLsForProxy(proxy) {
  */
 export function getLsFor(proxy) {
   return _pool.get(proxyKey(proxy)) || null;
+}
+
+// ─── Auto-restart ─────────────────────────────────────────────
+
+const _restartAttempts = new Map();
+
+function scheduleLsRestart(key, proxy, oldPort) {
+  const attempts = (_restartAttempts.get(key) || 0) + 1;
+  if (attempts > AUTO_RESTART_MAX_RETRIES) {
+    log.error(`LS auto-restart: ${key} exceeded max retries (${AUTO_RESTART_MAX_RETRIES}), giving up`);
+    _restartAttempts.delete(key);
+    return;
+  }
+
+  const delay = AUTO_RESTART_BASE_DELAY_MS * Math.pow(2, attempts - 1);
+  _restartAttempts.set(key, attempts);
+
+  log.info(`LS auto-restart: scheduling ${key} restart #${attempts} in ${delay}ms`);
+
+  setTimeout(async () => {
+    try {
+      await ensureLs(proxy);
+      _restartAttempts.delete(key);
+      log.info(`LS auto-restart: ${key} restarted successfully (attempt #${attempts})`);
+    } catch (err) {
+      log.error(`LS auto-restart: ${key} restart #${attempts} failed: ${err.message}`);
+      if (attempts < AUTO_RESTART_MAX_RETRIES) {
+        scheduleLsRestart(key, proxy, oldPort);
+      }
+    }
+  }, delay).unref();
+}
+
+export function getRestartStats() {
+  const stats = {};
+  for (const [key, attempts] of _restartAttempts) {
+    stats[key] = attempts;
+  }
+  return stats;
 }
 
 /**
@@ -577,6 +638,7 @@ export function stopLanguageServer() {
   // cascade ids into the next LS's session window.
   const portsToClose = [];
   for (const [key, entry] of _pool) {
+    _intentionalShutdown.add(key);  // prevent auto-restart
     try { entry.process?.kill('SIGTERM'); } catch {}
     if (entry?.port) portsToClose.push({ port: entry.port, generation: entry.generation });
     log.info(`LS instance ${key} stopped`);
