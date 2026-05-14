@@ -136,14 +136,18 @@ if (fs.existsSync(apiPath)) {
 console.log('\nComparing locale files...');
 const enPath = path.join(__dirname, 'i18n/en.json');
 const zhPath = path.join(__dirname, 'i18n/zh-CN.json');
+const ukPath = path.join(__dirname, 'i18n/uk.json');
 
 const enJson = JSON.parse(fs.readFileSync(enPath, 'utf-8'));
 const zhJson = JSON.parse(fs.readFileSync(zhPath, 'utf-8'));
+const ukJson = JSON.parse(fs.readFileSync(ukPath, 'utf-8'));
 
 const enKeys = extractKeys(enJson).sort();
 const zhKeys = extractKeys(zhJson).sort();
+const ukKeys = extractKeys(ukJson).sort();
 
 const { onlyInEn, onlyInZh } = compareLocales(enKeys, zhKeys);
+const { onlyInEn: onlyInEnUk, onlyInZh: onlyInUkEn } = compareLocales(ukKeys, enKeys);
 
 if (onlyInEn.length > 0) {
   logError(`Keys in en.json but missing in zh-CN.json (${onlyInEn.length}):`);
@@ -155,7 +159,17 @@ if (onlyInZh.length > 0) {
   onlyInZh.forEach(k => console.log(`  - ${k}`));
 }
 
-if (onlyInEn.length === 0 && onlyInZh.length === 0) {
+if (onlyInEnUk.length > 0) {
+  logError(`Keys in uk.json but missing in en.json (${onlyInEnUk.length}):`);
+  onlyInEnUk.forEach(k => console.log(`  - ${k}`));
+}
+
+if (onlyInUkEn.length > 0) {
+  logError(`Keys in en.json but missing in uk.json (${onlyInUkEn.length}):`);
+  onlyInUkEn.forEach(k => console.log(`  - ${k}`));
+}
+
+if (onlyInEn.length === 0 && onlyInZh.length === 0 && onlyInEnUk.length === 0 && onlyInUkEn.length === 0) {
   logOk('Locale files are synchronized');
 }
 
@@ -176,12 +190,14 @@ for (const key of usedKeys) {
   const parts = key.split('.');
   let enVal = enJson;
   let zhVal = zhJson;
+  let ukVal = ukJson;
   let exists = true;
 
   for (const part of parts) {
     enVal = enVal?.[part];
     zhVal = zhVal?.[part];
-    if (enVal === undefined || zhVal === undefined) {
+    ukVal = ukVal?.[part];
+    if (enVal === undefined || zhVal === undefined || ukVal === undefined) {
       exists = false;
       break;
     }
@@ -232,12 +248,14 @@ for (const key of uniqueJsKeys) {
   const parts = key.split('.');
   let enVal = enJson;
   let zhVal = zhJson;
+  let ukVal = ukJson;
   let exists = true;
 
   for (const part of parts) {
     enVal = enVal?.[part];
     zhVal = zhVal?.[part];
-    if (enVal === undefined || zhVal === undefined) {
+    ukVal = ukVal?.[part];
+    if (enVal === undefined || zhVal === undefined || ukVal === undefined) {
       exists = false;
       break;
     }

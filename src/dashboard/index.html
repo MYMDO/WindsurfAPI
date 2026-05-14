@@ -2354,7 +2354,7 @@ const I18n = {
 
   // Load locale bundle from server
   async loadLocale(lang) {
-    const code = lang === 'zh' ? 'zh-CN' : (lang === 'en' ? 'en' : lang);
+    const code = lang === 'zh' ? 'zh-CN' : (lang === 'en' ? 'en' : (lang === 'uk' ? 'uk' : lang));
     try {
       const res = await fetch(`/dashboard/i18n/${code}.json`);
       if (!res.ok) throw new Error(`Failed to load ${code}`);
@@ -2369,7 +2369,7 @@ const I18n = {
 
   // Get translation with placeholder interpolation
   t(key, vars = {}) {
-    const code = this.locale === 'zh' ? 'zh-CN' : this.locale;
+    const code = this.locale === 'zh' ? 'zh-CN' : (this.locale === 'uk' ? 'uk' : this.locale);
     const bundle = this.bundles[code] || {};
     const keys = key.split('.');
     let val = bundle;
@@ -2447,18 +2447,19 @@ const I18n = {
     });
 
     // Update HTML lang attribute
-    document.documentElement.lang = this.locale === 'zh' || this.locale === 'zh-CN' ? 'zh-CN' : 'en';
+    const isZh = this.locale === 'zh' || this.locale === 'zh-CN';
+    const isUk = this.locale === 'uk';
+    document.documentElement.lang = isZh ? 'zh-CN' : (isUk ? 'uk' : 'en');
 
     // Update language indicator
-    const zhMode = this.locale === 'zh' || this.locale === 'zh-CN';
     const indicator = document.getElementById('lang-indicator');
-    if (indicator) indicator.textContent = zhMode ? '中文' : 'English';
+    if (indicator) indicator.textContent = isZh ? '中文' : (isUk ? 'Укр' : 'English');
     const toggleBtn = document.getElementById('lang-toggle-btn');
-    if (toggleBtn) toggleBtn.title = I18n.t(zhMode ? 'footer.langToggleToEn' : 'footer.langToggleToZh');
+    if (toggleBtn) toggleBtn.title = I18n.t(isZh ? 'footer.langToggleToEn' : (isUk ? 'footer.langToggleToUk' : 'footer.langToggleToZh'));
   },
 
   async setLocale(lang) {
-    const code = lang === 'zh' ? 'zh-CN' : (lang === 'en' ? 'en' : lang);
+    const code = lang === 'zh' ? 'zh-CN' : (lang === 'en' ? 'en' : (lang === 'uk' ? 'uk' : lang));
     if (!this.bundles[code]) {
       await this.loadLocale(lang);
     }
@@ -2470,7 +2471,7 @@ const I18n = {
   async init() {
     const saved = localStorage.getItem('lang');
     const browser = navigator.language;
-    const defaultLang = saved || (browser.startsWith('zh') ? 'zh' : 'en');
+    const defaultLang = saved || (browser.startsWith('zh') ? 'zh' : (browser.startsWith('uk') ? 'uk' : 'en'));
     await this.setLocale(defaultLang);
   }
 };
@@ -2480,7 +2481,7 @@ function t(key, vars) { return I18n.t(key, vars); }
 
 const App = {
   password: localStorage.getItem('dp') || '',
-  lang: localStorage.getItem('lang') || 'zh',
+  lang: localStorage.getItem('lang') || (navigator.language.startsWith('uk') ? 'uk' : 'zh'),
   sseConn: null,
   logEntries: [],
   pollers: {},
@@ -2504,7 +2505,9 @@ const App = {
   },
 
   async toggleLang() {
-    const newLang = I18n.locale === 'zh' || I18n.locale === 'zh-CN' ? 'en' : 'zh';
+    const isZh = I18n.locale === 'zh' || I18n.locale === 'zh-CN';
+    const isEn = I18n.locale === 'en';
+    const newLang = isZh ? 'en' : (isEn ? 'uk' : 'zh');
     await I18n.setLocale(newLang);
     this.lang = newLang;
     this.refreshActivePanelI18n();

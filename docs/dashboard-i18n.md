@@ -7,6 +7,7 @@ This document describes the internationalization system used in the WindsurfAPI 
 The dashboard supports multiple languages through JSON locale bundles. Currently implemented:
 - English (`en`)
 - Simplified Chinese (`zh-CN`)
+- Ukrainian (`uk`)
 
 ## Architecture
 
@@ -16,6 +17,7 @@ The dashboard supports multiple languages through JSON locale bundles. Currently
 |------|---------|
 | `src/dashboard/i18n/en.json` | English translations |
 | `src/dashboard/i18n/zh-CN.json` | Chinese translations |
+| `src/dashboard/i18n/uk.json` | Ukrainian translations |
 | `src/dashboard/index.html` | Main dashboard (contains I18n helper) |
 | `src/dashboard/check-i18n.js` | Regression protection script |
 
@@ -50,7 +52,7 @@ Add `data-i18n` attributes to translatable elements:
 <h3 data-i18n="section.accounts.title">Active Accounts</h3>
 ```
 
-Update both locale files:
+Update all locale files:
 
 ```json
 // en.json
@@ -67,6 +69,15 @@ Update both locale files:
   "section": {
     "accounts": {
       "title": "活跃账号"
+    }
+  }
+}
+
+// uk.json
+{
+  "section": {
+    "accounts": {
+      "title": "Активні акаунти"
     }
   }
 }
@@ -210,19 +221,19 @@ jobs:
 
 ## Language Toggle
 
-The dashboard persists language preference in `localStorage`:
+The dashboard cycles through 3 languages: `zh-CN` → `en` → `uk` → `zh-CN`. Language preference is persisted in `localStorage`.
 
 ```javascript
-// Toggle language
+// Toggle language (zh-CN → en → uk → zh-CN)
 I18n.toggle();
 
 // Get current locale
-const current = I18n.currentLocale; // 'en' or 'zh-CN'
+const current = I18n.currentLocale; // 'en', 'zh-CN', or 'uk'
 ```
 
 ## Best Practices
 
-1. **Always add both locales**: When adding a new key, add it to both `en.json` and `zh-CN.json`
+1. **Always add all locales**: When adding a new key, add it to `en.json`, `zh-CN.json`, and `uk.json`
 
 2. **Use descriptive keys**: Prefer `card.activeAccounts.title` over `card.title1`
 
@@ -230,7 +241,7 @@ const current = I18n.currentLocale; // 'en' or 'zh-CN'
 
 4. **Error codes**: Use `ERR_*` prefix for backend error codes
 
-5. **Test both languages**: Verify your changes in both EN and CN modes
+5. **Test all languages**: Verify your changes in EN, CN, and UA modes
 
 6. **Run regression check**: Use `check-i18n.js` before committing
 

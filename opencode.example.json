@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "model": "windsurf/claude-sonnet-4.6",
+  "small_model": "windsurf/claude-4.5-haiku",
+
+  "provider": {
+    "windsurf": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Windsurf API",
+      "options": {
+        "baseURL": "http://localhost:3003/v1",
+        "apiKey": "local-dev-key"
+      },
+      "models": {
+        "claude-sonnet-4.6":                { "name": "Claude Sonnet 4.6" },
+        "claude-sonnet-4.6-thinking":        { "name": "Claude Sonnet 4.6 Thinking" },
+        "claude-sonnet-4.6-1m":              { "name": "Claude Sonnet 4.6 (1M контекст)" },
+        "claude-sonnet-4.6-thinking-1m":     { "name": "Claude Sonnet 4.6 Thinking (1M контекст)" },
+        "claude-opus-4.6":                   { "name": "Claude Opus 4.6" },
+        "claude-opus-4.6-thinking":          { "name": "Claude Opus 4.6 Thinking" },
+        "claude-opus-4-7-max":               { "name": "Claude Opus 4.7 Max" },
+        "claude-4.5-haiku":                  { "name": "Claude 4.5 Haiku" },
+        "claude-4.5-opus":                   { "name": "Claude 4.5 Opus" },
+        "gpt-5-codex":                       { "name": "GPT-5 Codex" },
+        "gemini-2.5-pro":                    { "name": "Gemini 2.5 Pro" },
+        "gemini-3.1-pro-high":               { "name": "Gemini 3.1 Pro High" },
+        "grok-3":                            { "name": "Grok 3" },
+        "grok-3-mini-thinking":              { "name": "Grok 3 Mini Thinking" },
+        "kimi-k2":                           { "name": "Kimi K2" },
+        "glm-5.1":                           { "name": "GLM 5.1" }
+      }
+    }
+  }
+}
