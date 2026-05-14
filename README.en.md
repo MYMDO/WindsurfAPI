@@ -1,10 +1,11 @@
 # Star & Follow me and I'll leave you alone
 
 <p align="center">
-  <a href="https://github.com/dwgx/WindsurfAPI/stargazers"><img src="https://img.shields.io/github/stars/dwgx/WindsurfAPI?style=for-the-badge&logo=github&color=f5c518" alt="Stars"></a>&nbsp;
-  <a href="https://github.com/dwgx"><img src="https://img.shields.io/github/followers/dwgx?label=Follow&style=for-the-badge&logo=github&color=181717" alt="Follow"></a>
+  <a href="https://github.com/MYMDO/WindsurfAPI/stargazers"><img src="https://img.shields.io/github/stars/MYMDO/WindsurfAPI?style=for-the-badge&logo=github&color=f5c518" alt="Stars"></a>&nbsp;
+  <a href="https://github.com/MYMDO"><img src="https://img.shields.io/github/followers/MYMDO?label=Follow&style=for-the-badge&logo=github&color=181717" alt="Follow"></a>
   &nbsp;·&nbsp;
-  <a href="README.md">中文/简体中文</a>
+  <a href="README.md">Українська</a>&nbsp;
+  <a href="README.zh.md">中文/简体中文</a>
 </p>
 
 # Notice

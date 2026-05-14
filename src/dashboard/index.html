@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1550,8 +1550,8 @@ window._firebaseOAuth = async function(provider) {
     </div>
   </nav>
   <div class="footer">
-    <button id="lang-toggle-btn" class="btn btn-ghost btn-xs" onclick="App.toggleLang()" title="Switch language" style="margin-right:8px">
-      <span id="lang-indicator">中文</span>
+    <button id="lang-toggle-btn" class="btn btn-ghost btn-xs" onclick="App.toggleLang()" title="Змінити мову" style="margin-right:8px">
+      <span id="lang-indicator">Укр</span>
     </button>
     <span>© Windsurf</span>
     <span class="ver" id="sidebar-ver" data-i18n-title="footer.version" title="版本">v1.2.0</span>
@@ -2348,7 +2348,7 @@ window._firebaseOAuth = async function(provider) {
 <script>
 // Comprehensive i18n system with locale bundles
 const I18n = {
-  locale: 'zh-CN',
+  locale: 'uk',
   bundles: {},
   loaded: false,
 
@@ -2455,7 +2455,7 @@ const I18n = {
     const indicator = document.getElementById('lang-indicator');
     if (indicator) indicator.textContent = isZh ? '中文' : (isUk ? 'Укр' : 'English');
     const toggleBtn = document.getElementById('lang-toggle-btn');
-    if (toggleBtn) toggleBtn.title = I18n.t(isZh ? 'footer.langToggleToEn' : (isUk ? 'footer.langToggleToUk' : 'footer.langToggleToZh'));
+    if (toggleBtn) toggleBtn.title = I18n.t(isZh ? 'footer.langToggleToEn' : (isUk ? 'footer.langToggleToZh' : 'footer.langToggleToUk'));
   },
 
   async setLocale(lang) {
@@ -2471,7 +2471,7 @@ const I18n = {
   async init() {
     const saved = localStorage.getItem('lang');
     const browser = navigator.language;
-    const defaultLang = saved || (browser.startsWith('zh') ? 'zh' : (browser.startsWith('uk') ? 'uk' : 'en'));
+    const defaultLang = saved || (browser.startsWith('uk') ? 'uk' : (browser.startsWith('zh') ? 'zh' : 'uk'));
     await this.setLocale(defaultLang);
   }
 };
@@ -2481,7 +2481,7 @@ function t(key, vars) { return I18n.t(key, vars); }
 
 const App = {
   password: localStorage.getItem('dp') || '',
-  lang: localStorage.getItem('lang') || (navigator.language.startsWith('uk') ? 'uk' : 'zh'),
+  lang: localStorage.getItem('lang') || 'uk',
   sseConn: null,
   logEntries: [],
   pollers: {},

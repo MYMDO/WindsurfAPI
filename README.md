@@ -1,162 +1,166 @@
-# 给我点 Star 和 Follow 我就不管你了
+# Постав зірочку та підпишись — і я залишу тебе в спокої
 
 <p align="center">
-  <a href="https://github.com/dwgx/WindsurfAPI/stargazers"><img src="https://img.shields.io/github/stars/dwgx/WindsurfAPI?style=for-the-badge&logo=github&color=f5c518" alt="Stars"></a>&nbsp;
-  <a href="https://github.com/dwgx"><img src="https://img.shields.io/github/followers/dwgx?label=Follow&style=for-the-badge&logo=github&color=181717" alt="Follow"></a>
+  <a href="https://github.com/MYMDO/WindsurfAPI/stargazers"><img src="https://img.shields.io/github/stars/MYMDO/WindsurfAPI?style=for-the-badge&logo=github&color=f5c518" alt="Stars"></a>&nbsp;
+  <a href="https://github.com/MYMDO"><img src="https://img.shields.io/github/followers/MYMDO?label=Follow&style=for-the-badge&logo=github&color=181717" alt="Follow"></a>
   &nbsp;·&nbsp;
+  <a href="README.zh.md">中文/简体中文</a>&nbsp;
   <a href="README.en.md">English</a>
 </p>
 
-# 声明
+# Повідомлення
 
-> **没点 Star 和 Follow 的**：严禁商业使用、转售、代部署、挂后台对外提供服务、包装成中转服务出售。
-> **点了 Star 和 Follow 的**：随便用，我睁一只眼闭一只眼。
+> **Якщо ви не поставили зірочку та не підписалися**: комерційне використання, перепродаж, платне розгортання, надання як публічного сервісу або перепродаж як транзитного сервісу суворо заборонено.
+> **Якщо ви поставили зірочку та підписалися**: користуйтеся, я заплющу очі.
 >
-> 代码本体按 MIT License 开源（见 [LICENSE](LICENSE)），上面这段是作者个人态度。
+> Код поширюється за ліцензією MIT (див. [LICENSE](LICENSE)); вищезазначене є особистою позицією автора.
 
 ---
 
-把 [Windsurf](https://windsurf.com)（原 Codeium）的 AI 模型变成**两套标准 API 同时兼容**：
+Перетворює AI-моделі [Windsurf](https://windsurf.com) (раніше Codeium) на **два стандартні сумісні API**:
 
-- `POST /v1/chat/completions` — **OpenAI 兼容** 任何 OpenAI SDK 直接用
-- `POST /v1/messages` — **Anthropic 兼容** Claude Code / Cline / Cursor 直接连
+- `POST /v1/chat/completions` — **OpenAI-сумісний** для будь-якого OpenAI SDK.
+- `POST /v1/messages` — **Anthropic-сумісний** для прямого підключення Claude Code / Cline / Cursor.
 
-**100+ 模型**：Claude 4.5/4.6/Opus 4.7 · GPT-5/5.1/5.2/5.4 全系 · Gemini 2.5/3.0/3.1 · Grok · Qwen · Kimi K2.x · GLM 4.7/5/5.1 · MiniMax · SWE 1.5/1.6 · Arena 等。零 npm 依赖 纯 Node.js。
+**100+ моделей**: Claude 4.5/4.6/Opus 4.7 · GPT-5/5.1/5.2/5.4 серія · Gemini 2.5/3.0/3.1 · Grok · Qwen · Kimi K2.x · GLM 4.7/5/5.1 · MiniMax · SWE 1.5/1.6 · Arena та інші. Жодних npm-залежностей, чистий Node.js.
 
-## 它到底在干嘛
+## Що це робить?
 
-```
-     ┌─────────────┐   /v1/chat/completions   ┌────────────┐
-     │ OpenAI SDK  │ ──────────────────────→  │            │
-     │ curl / 前端 │ ←──────────────────────  │            │
-     └─────────────┘   OpenAI JSON + SSE      │ WindsurfAPI│
-                                              │ Node.js    │      ┌──────────────┐       ┌─────────────────┐
-     ┌─────────────┐   /v1/messages           │ (本服务)   │ gRPC │ Language     │ HTTPS │ Windsurf 云端   │
-     │ Claude Code │ ──────────────────────→  │            │ ───→ │ Server (LS)  │ ────→ │ server.self-    │
-     │ Cline       │ ←──────────────────────  │            │ ←─── │ (Windsurf    │ ←─── │ serve.windsurf  │
-     │ Cursor      │   Anthropic SSE          │            │      │  binary)     │       │ .com            │
-     └─────────────┘                          └────────────┘      └──────────────┘       └─────────────────┘
-                                                    ↑
-                                                账号池轮询
-                                                速率限制隔离
-                                                故障转移
-```
+```mermaid
+flowchart LR
+    subgraph Клієнти
+        A[OpenAI SDK<br>curl / Frontend]
+        B[Claude Code<br>Cline<br>Cursor]
+    end
 
-**它做了什么**：
-1. 一个 HTTP 服务（端口 3003）同时暴露 OpenAI 和 Anthropic 两套 API
-2. 把请求翻译成 Windsurf 内部 gRPC 协议，通过本地 Language Server 发给 Windsurf 云
-3. 维护账号池，自动轮询 + 速率限制 + 故障转移
-4. 返回前把上游 Windsurf 身份剥掉，模型自称"我是 Claude Opus 4.6 由 Anthropic 开发"
+    subgraph WindsurfAPI["WindsurfAPI (Node.js)"]
+        C[HTTP-сервіс<br>Порт 3003]
+        D[Пул акаунтів<br>Round-Robin<br>Обмеження швидкості<br>Відмовостійкість]
+    end
 
-## Claude Code / Cline / Cursor 怎么用
+    E["Language Server<br>(Windsurf binary)"]
+    F[Windsurf Cloud<br>server.self-serve.windsurf.com]
 
-模型本身**不会**操作文件 — 文件操作是 IDE Agent 客户端（Claude Code / Cline 等）在本地执行的：
-
-```
- 你 "帮我改 bug"                Claude Code                    WindsurfAPI               Windsurf Cloud
-   │                                │                               │                          │
-   │────────────────────────────→  │                               │                          │
-   │                                │  POST /v1/messages            │                          │
-   │                                │  messages + tools + system    │                          │
-   │                                │ ─────────────────────────────→│ 打包成 Cascade 请求      │
-   │                                │                               │ ──────────────────────→  │
-   │                                │                               │                          │
-   │                                │                               │               模型思考 → 返回
-   │                                │                               │               tool_use(edit_file)
-   │                                │                               │ ←──────────────────────  │
-   │                                │ ←── Anthropic SSE ────────────│                          │
-   │                                │   content_block=tool_use      │                          │
-   │                                │                               │                          │
-   │                                │ 本地执行 edit_file()          │                          │
-   │                                │ (读写本地文件)                │                          │
-   │                                │                               │                          │
-   │                                │ 带 tool_result 再发一轮       │                          │
-   │                                │ ─────────────────────────────→│ ──────────────────────→  │
-   │                                │                                             ... (循环) ...
-   │                                │                               │                          │
-   │  ← 最终答案                    │                               │                          │
+    A -->|"/v1/chat/completions"<br>OpenAI JSON + SSE| C
+    B -->|"/v1/messages"<br>Anthropic SSE| C
+    C <-->|gRPC| E
+    E <-->|HTTPS| F
+    D -.-> C
 ```
 
-**重点**：WindsurfAPI 只负责**传递** tool_use / tool_result，真正改文件的是客户端 CLI。
+**Що він робить**:
+1. HTTP-сервіс (порт 3003), який одночасно надає OpenAI та Anthropic API.
+2. Перекладає запити у внутрішній gRPC-протокол Windsurf і надсилає їх у хмару Windsurf через локальний Language Server.
+3. Керує пулом акаунтів з автоматичним round-robin, обмеженням швидкості та відмовостійкістю.
+4. Видаляє ідентичність upstream Windsurf перед поверненням відповіді, змушуючи модель представлятися як "Я Claude Opus 4.6, розроблений Anthropic."
 
-## 快速开始
+## Як використовувати з Claude Code / Cline / Cursor
 
-### 一键部署
+Модель сама по собі **не** працює з файлами — файлові операції виконуються локально клієнтом IDE Agent (Claude Code, Cline тощо):
+
+```mermaid
+sequenceDiagram
+    actor U as Ви
+    participant CC as Claude Code
+    participant WA as WindsurfAPI
+    participant WC as Windsurf Cloud
+
+    U->>CC: "Допоможи виправити баг"
+    CC->>WA: POST /v1/messages<br>messages + tools + system
+    WA->>WC: Пакує в Cascade-запит
+    WC-->>WA: Модель думає → повертає<br>tool_use(edit_file)
+    WA-->>CC: Anthropic SSE<br>content_block=tool_use
+    CC->>CC: Виконує edit_file() локально<br>(читання/запис локальних файлів)
+    CC->>WA: Надсилає tool_result
+    WA->>WC: Продовжує розмову...
+    loop Цикл розмови
+        WC-->>WA: Відповідь
+        WA-->>CC: SSE-потік
+    end
+    CC-->>U: Фінальна відповідь
+```
+
+**Ключовий момент**: WindsurfAPI відповідає лише за **передачу** `tool_use` / `tool_result`. Файли насправді змінює клієнтський CLI.
+
+## Швидкий старт
+
+### Розгортання однією командою
 
 ```bash
-git clone https://github.com/dwgx/WindsurfAPI.git
+git clone https://github.com/MYMDO/WindsurfAPI.git
 cd WindsurfAPI
-bash setup.sh          # 建目录 · 配权限 · 生成 .env
+bash setup.sh          # Створення директорій · Встановлення прав · Генерація .env
 node src/index.js
 ```
 
-Dashboard：`http://你的IP:3003/dashboard`
+Dashboard: `http://YOUR_IP:3003/dashboard`
 
-### Docker 部署
+### Розгортання через Docker
 
 ```bash
 cp .env.example .env
 
-# 可选：提前把 language_server_linux_x64 放到 .docker-data/opt/windsurf/ 下
-# 不放也行，容器首次启动时会自动下载到 /opt/windsurf/
+# Опціонально: розмістіть language_server_linux_x64 у .docker-data/opt/windsurf/
+# Якщо пропустити, контейнер автоматично завантажить його під час першого запуску.
 
 docker compose up -d --build
 docker compose logs -f
 ```
 
-默认挂载：
+Точки монтування за замовчуванням:
 
-- `./.docker-data/data`：持久化 `accounts.json`、`proxy.json`、`stats.json`、`runtime-config.json`、`model-access.json`、`logs/`
-- `./.docker-data/opt/windsurf`：Language Server 二进制与数据目录
-- `./.docker-data/tmp/windsurf-workspace`：临时工作区
+- `./.docker-data/data`: збережені `accounts.json`, `proxy.json`, `stats.json`, `runtime-config.json`, `model-access.json` та `logs/`
+- `./.docker-data/opt/windsurf`: бінарний файл Language Server та його директорія даних
+- `./.docker-data/tmp/windsurf-workspace`: тимчасова робоча директорія
 
-如果想改持久化目录，可在 `.env` 里设置 `DATA_DIR`。Docker 默认已设为 `/data`。
+Якщо ви хочете інше місце зберігання, встановіть `DATA_DIR` у `.env`. Docker-налаштування за замовчуванням використовує `/data`.
 
-### 一键更新
+### Оновлення однією командою
 
-部署过之后要拉最新修复，一条命令搞定：
+Щоб отримати останні виправлення після розгортання, виконайте одну команду:
 
 ```bash
 cd ~/WindsurfAPI && bash update.sh
 ```
 
-`update.sh` 做了：`git pull` → 停 PM2 → kill 3003 端口残留 → 重启 → 健康检查。
+`update.sh` робить: `git pull` → зупиняє PM2 → вбиває залишкові процеси на порту 3003 → перезапускає → перевірка здоров'я.
 
-如果你用的是我们的公网实例（`skiapi.dev` 之类），不用管，我们已经推过了。
+Якщо ви використовуєте наші публічні інстанси (`skiapi.dev` тощо), вам нічого не потрібно робити — ми вже застосували оновлення.
 
-### 手动安装
+### Ручне встановлення
 
 ```bash
-git clone https://github.com/dwgx/WindsurfAPI.git
+git clone https://github.com/MYMDO/WindsurfAPI.git
 cd WindsurfAPI
 
-# Language Server 二进制 —— 自动检测 Linux/macOS，一键下载 + chmod
+# Бінарний файл Language Server — автоматичне визначення Linux/macOS, завантаження + chmod однією командою
 bash install-ls.sh
 
-# 默认安装路径：
-#   Linux x64:          /opt/windsurf/language_server_linux_x64
-#   Linux arm64:        /opt/windsurf/language_server_linux_arm
+# Шляхи встановлення за замовчуванням:
+#   Linux x64:           /opt/windsurf/language_server_linux_x64
+#   Linux arm64:         /opt/windsurf/language_server_linux_arm
 #   macOS Apple Silicon: $HOME/.windsurf/language_server_macos_arm
-#   macOS Intel:        $HOME/.windsurf/language_server_macos_x64
+#   macOS Intel:         $HOME/.windsurf/language_server_macos_x64
 
-# 如果想用本地已下好的 binary：
+# Або використайте локальний бінарний файл:
 #   bash install-ls.sh /path/to/language_server_linux_x64
-# 或者指定 URL：
+# Або вкажіть власний URL:
 #   bash install-ls.sh --url https://example.com/language_server_linux_x64
 
-# ⚠️ 看不到 opus-4.7 / 其他新模型？
-# Exafunction/codeium 公开 release 最新停在 v2.12.5（2026-01），不含 4.7。
-# 要 4.7，把 Windsurf 桌面端本体里的 LS binary 拷过来：
+# ⚠️ Не бачите opus-4.7 / інші нові моделі?
+# Публічний реліз Exafunction/codeium застряг на v2.12.5 (січень 2026)
+# і не містить 4.7. Щоб отримати 4.7, скопіюйте бінарний файл LS
+# з пакунку десктопного застосунку Windsurf:
 #
 #   macOS:   "$HOME/Library/Application Support/Windsurf/resources/app/extensions/windsurf/bin/language_server_macos_arm"
 #   Linux:   "$HOME/.windsurf/bin/language_server_linux_x64"
-#            或  /opt/Windsurf/resources/app/extensions/windsurf/bin/language_server_linux_x64
+#            або /opt/Windsurf/resources/app/extensions/windsurf/bin/language_server_linux_x64
 #   Windows: %APPDATA%\Windsurf\bin\language_server_windows_x64.exe
 #
-#   # 从本地桌面端装：
+#   # Встановлення з локальної копії:
 #   bash install-ls.sh /path/to/language_server_linux_x64
 #
-# LS binary 一换，/v1/models 立刻就能看到最新模型目录了（云端自动发现）。
+# Після заміни /v1/models автоматично виявить новіший каталог із хмари.
 
 cat > .env << 'EOF'
 PORT=3003
@@ -170,31 +174,78 @@ LS_PORT=42100
 DASHBOARD_PASSWORD=
 EOF
 
-# macOS 本地部署时，使用 install-ls.sh 打印的 LS_BINARY_PATH，
-# 并把 LS_DATA_DIR 设到用户可写目录，例如 /Users/you/.windsurf/data。
+# Для локального запуску на macOS використовуйте LS_BINARY_PATH, який вивів install-ls.sh
+# та встановіть LS_DATA_DIR на шлях, доступний для запису користувачем,
+# наприклад /Users/you/.windsurf/data.
+
+# Примітка: Inline-коментарі підтримуються в .env для значень без лапок:
+#   PORT=3003  # Порт сервісу
+# Значення в лапках зберігають все всередині лапок.
 
 node src/index.js
 ```
 
-## 加账号
+## Критичні підводні камені (прочитайте обов'язково!)
 
-服务跑起来之后要先加 Windsurf 账号才能用，三种方式：
+### 1. model-access.json блокує ВСІ моделі
+Файл `.docker-data/data/model-access.json` має три режими:
+- `"all"` — без обмежень (**потрібний** для роботи)
+- `"allowlist"` — лише моделі зі списку (порожній список = все заблоковано)
+- `"blocklist"` — всі, крім заблокованих
 
-**方式 1 Dashboard 一键登录（推荐）**
+**Симптом:** Будь-який запит повертає `403` з помилкою `模型 X 不在允許清單中`.
 
-打开 `http://你的IP:3003/dashboard` → 登录取号 → 点 **Google 登录** 或 **GitHub 登录**（OAuth 弹窗）或直接填邮箱密码。所有方式都会自动入池。
+**Виправлення:**
+```bash
+curl -s -X PUT http://localhost:3003/dashboard/api/model-access \
+  -H "X-Dashboard-Password: ваш_пароль" \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"all","list":[]}'
+```
 
-**方式 2 Token（任何登录方式都能用）**
+**Захист від випадкової зміни:**
+```bash
+chmod 444 ./.docker-data/data/model-access.json
+```
 
-去 [windsurf.com/show-auth-token](https://windsurf.com/show-auth-token) 复制 Token：
+### 2. API_KEY обов'язковий при HOST=0.0.0.0
+Якщо сервер слухає на `0.0.0.0` (а не `127.0.0.1`), він активує fail-closed режим — вимагає `Authorization: Bearer <API_KEY>` навіть якщо ви не планували захист. Обов'язково встановіть `API_KEY=something` у `.env`.
+
+### 3. Free-акаунт майже безкорисний для Claude Code / OpenCode
+Безкоштовний Windsurf дає доступ лише до `gemini-2.5-flash`, `glm-4.7/5/5.1`, `kimi-k2/k2.5` та аналогічних моделей. Ці моделі **не підтримують інструменти** (читання/запис файлів, виконання команд). OpenCode надсилає 12 інструментів — free-tier їх відхиляє.
+
+**Pro tier** — єдиний варіант для повноцінної роботи з інструментами. Дає 113+ моделей з повною підтримкою.
+
+## Додавання акаунтів
+
+Після запуску сервісу необхідно додати акаунти Windsurf. Є три способи:
+
+**Спосіб 1: Dashboard — один клік (рекомендовано)**
+
+Відкрийте `http://YOUR_IP:3003/dashboard` → Увійдіть, щоб отримати токен → Натисніть **Sign in with Google** або **Sign in with GitHub** (OAuth-спливаюче вікно) або введіть email/пароль безпосередньо. Всі методи автоматично додадуть акаунт до пулу.
+
+**Спосіб 2: Токен (працює з будь-яким методом входу)**
+
+Перейдіть на [windsurf.com/show-auth-token](https://windsurf.com/show-auth-token), щоб скопіювати токен:
 
 ```bash
 curl -X POST http://localhost:3003/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"token": "你的token"}'
+  -d '{"token": "YOUR_TOKEN"}'
 ```
 
-**方式 3 批量**
+Після додавання зачекайте ~15 секунд на визначення тарифу, потім викличте probe:
+
+```bash
+# Отримайте ID акаунта:
+curl http://localhost:3003/dashboard/api/accounts -H "X-Dashboard-Password: ваш_пароль"
+
+# Запустіть probe:
+curl -X POST http://localhost:3003/dashboard/api/accounts/$ID/probe \
+  -H "X-Dashboard-Password: ваш_пароль"
+```
+
+**Спосіб 3: Пакетне додавання**
 
 ```bash
 curl -X POST http://localhost:3003/auth/login \
@@ -202,141 +253,183 @@ curl -X POST http://localhost:3003/auth/login \
   -d '{"accounts": [{"token": "t1"}, {"token": "t2"}]}'
 ```
 
-## 调用示例
+## Приклади використання
 
-### OpenAI 格式（Python / JS / curl）
+### OpenAI формат (Python / JS / curl)
 
 ```python
 from openai import OpenAI
-client = OpenAI(base_url="http://你的IP:3003/v1", api_key="你设的API_KEY")
+client = OpenAI(base_url="http://YOUR_IP:3003/v1", api_key="YOUR_API_KEY")
 r = client.chat.completions.create(
     model="claude-sonnet-4.6",
-    messages=[{"role": "user", "content": "你好"}]
+    messages=[{"role": "user", "content": "Привіт"}]
 )
 print(r.choices[0].message.content)
 ```
 
-### Anthropic 格式（Claude Code 直接连）
+### Anthropic формат (безпосередньо з Claude Code)
 
 ```bash
-export ANTHROPIC_BASE_URL=http://你的IP:3003
-export ANTHROPIC_API_KEY=你设的API_KEY
-claude                # 正常用 Claude Code 即可
+export ANTHROPIC_BASE_URL=http://YOUR_IP:3003
+export ANTHROPIC_API_KEY=YOUR_API_KEY
+claude                # Використовуйте Claude Code як зазвичай
 ```
 
 ```bash
-# 裸 curl 测试
+# Прямий тест через curl
 curl http://localhost:3003/v1/messages \
-  -H "Authorization: Bearer 你的key" \
+  -H "Authorization: Bearer YOUR_KEY" \
   -H "anthropic-version: 2023-06-01" \
-  -d '{"model":"claude-opus-4.6","max_tokens":100,"messages":[{"role":"user","content":"你好"}]}'
+  -d '{"model":"claude-opus-4.6","max_tokens":100,"messages":[{"role":"user","content":"Привіт"}]}'
 ```
 
 ### Cline / Cursor / Aider
 
-在客户端配置里 **Custom OpenAI Compatible**：
-- Base URL: `http://你的IP:3003/v1`
-- API Key: 你设的 API_KEY
-- Model: 任选我们支持的模型
+У налаштуваннях вашого клієнта для **Custom OpenAI Compatible**:
+- Base URL: `http://YOUR_IP:3003/v1`
+- API Key: YOUR_API_KEY
+- Model: Виберіть будь-яку підтримувану модель.
 
-> **Cursor 用户注意**：Cursor 客户端白名单会拦截含 `claude` 的模型名（请求根本不到后端）。用以下别名绕过：
+> **Користувачі Cursor**: Cursor's клієнтський білий список блокує назви моделей, що містять `claude` (запит ніколи не досягає сервера). Використовуйте ці псевдоніми:
 >
-> | 在 Cursor 填 | 实际模型 |
+> | Введіть у Cursor | Фактична модель |
 > |---|---|
 > | `opus-4.6` | claude-opus-4.6 |
-> | `opus-4.6-thinking` | claude-opus-4.6-thinking |
-> | `opus-4.7` | claude-opus-4-7-medium |
 > | `sonnet-4.6` | claude-sonnet-4.6 |
-> | `sonnet-4.5` | claude-4.5-sonnet |
-> | `haiku-4.5` | claude-4.5-haiku |
+> | `opus-4.7` | claude-opus-4-7-medium |
 > | `ws-opus` | claude-opus-4.6 |
 > | `ws-sonnet` | claude-sonnet-4.6 |
 >
-> GPT / Gemini / DeepSeek 等不受 Cursor 白名单限制，直接填原名。
+> GPT / Gemini / DeepSeek моделі не підпадають під фільтр Cursor — використовуйте їх оригінальні назви.
 
-## 环境变量
+### OpenCode інтеграція
 
-| 变量 | 默认值 | 干嘛的 |
+Створіть `opencode.json` у корені вашого проєкту:
+
+```jsonc
+{
+  "model": "windsurf/claude-sonnet-4.6",
+  "small_model": "windsurf/claude-4.5-haiku",
+  "provider": {
+    "windsurf": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Windsurf API",
+      "options": {
+        "baseURL": "http://localhost:3003/v1",
+        "apiKey": "local-dev-key"
+      },
+      "models": {
+        "claude-sonnet-4.6":           { "name": "Claude Sonnet 4.6" },
+        "claude-sonnet-4.6-thinking":  { "name": "Claude Sonnet 4.6 Thinking" },
+        "claude-sonnet-4.6-1m":        { "name": "Claude Sonnet 4.6 (1M контекст)" },
+        "claude-4.5-haiku":            { "name": "Claude 4.5 Haiku" },
+        "claude-opus-4.6":             { "name": "Claude Opus 4.6" },
+        "claude-opus-4-7-max":         { "name": "Claude Opus 4.7 Max" },
+        "gpt-5-codex":                 { "name": "GPT-5 Codex" },
+        "gemini-2.5-pro":              { "name": "Gemini 2.5 Pro" },
+        "grok-3":                      { "name": "Grok 3" },
+        "kimi-k2":                     { "name": "Kimi K2" }
+      }
+    }
+  }
+}
+```
+
+## Змінні середовища
+
+| Змінна | За замовчуванням | Опис |
 |---|---|---|
-| `PORT` | `3003` | 服务端口 |
-| `API_KEY` | 空 | 调 API 要带的密钥 留空就不验证 |
-| `DATA_DIR` | 项目根目录 | 持久化 JSON 状态和 `logs/` 的目录，Docker 推荐设成 `/data` |
-| `DEFAULT_MODEL` | `claude-4.5-sonnet-thinking` | 不传 model 用哪个 |
-| `MAX_TOKENS` | `8192` | 默认最大回复 token 数 |
+| `PORT` | `3003` | Порт сервісу |
+| `API_KEY` | пусто | Ключ API для запитів. Залиште порожнім, щоб вимкнути валідацію. |
+| `DATA_DIR` | корінь проєкту | Директорія для збережених JSON-станів та `logs/`. Для Docker зазвичай використовуйте `/data`. |
+| `CODEIUM_API_KEY` | пусто | Прямий ключ API від Windsurf (альтернатива токену). |
+| `CODEIUM_AUTH_TOKEN` | пусто | Токен з [windsurf.com/show-auth-token](https://windsurf.com/show-auth-token). |
+| `CODEIUM_EMAIL` | пусто | Email для аутентифікації акаунта Windsurf. |
+| `CODEIUM_PASSWORD` | пусто | Пароль для аутентифікації акаунта Windsurf. |
+| `CODEIUM_API_URL` | `https://server.self-serve.windsurf.com` | URL API хмари Windsurf. |
+| `DEFAULT_MODEL` | `claude-4.5-sonnet-thinking` | Модель, що використовується, якщо `model` не вказано. |
+| `MAX_TOKENS` | `8192` | Максимальна кількість токенів у відповіді. |
 | `LOG_LEVEL` | `info` | debug / info / warn / error |
-| `LS_BINARY_PATH` | `/opt/windsurf/language_server_linux_x64` | LS 二进制位置 |
-| `LS_DATA_DIR` | Linux: `/opt/windsurf/data`；macOS: `~/.windsurf/data` | 每个 proxy 独立的 LS 数据根目录 |
-| `LS_PORT` | `42100` | LS gRPC 端口 |
-| `DASHBOARD_PASSWORD` | 空 | 后台密码 留空不设密码 |
-| `ALLOW_PRIVATE_PROXY_HOSTS` | 空 | 设为 `1` 允许在代理测试和登录时使用内网 IP（如 `192.168.x.x`、`10.x.x.x`）。默认留空仅允许公网地址 |
+| `LS_BINARY_PATH` | `/opt/windsurf/language_server_linux_x64` | Шлях до бінарного файлу LS. |
+| `LS_PORT` | `42100` | gRPC порт LS. |
+| `LS_DATA_DIR` | Linux: `/opt/windsurf/data`; macOS: `~/.windsurf/data` | Коренева директорія даних LS для кожного проксі. |
+| `DASHBOARD_PASSWORD` | пусто | Пароль Dashboard. Залиште порожнім для доступу без пароля. |
+| `ALLOW_PRIVATE_PROXY_HOSTS` | пусто | Встановіть `1`, щоб дозволити приватні/внутрішні IP (напр., `192.168.x.x`, `10.x.x.x`) у тестах проксі та логіні. Залиште порожнім, щоб дозволити лише публічні адреси (за замовчуванням). |
+| `CASCADE_REUSE_STRICT` | `0` | Встановіть `1` для суворого режиму повторного використання розмови (очікує той самий відбиток). |
+| `CASCADE_REUSE_STRICT_RETRY_MS` | `60000` | Затримка повторної спроби в мс для суворого режиму. |
+| `CASCADE_REUSE_HASH_SYSTEM` | `0` | Встановіть `1`, щоб включати системні повідомлення в хеш повторного використання розмови. |
 
-## Dashboard 功能面板
+## Можливості Dashboard
 
-打开 `http://你的IP:3003/dashboard`：
+Відкрийте `http://YOUR_IP:3003/dashboard`:
 
-| 面板 | 功能 |
+| Панель | Можливості |
 |---|---|
-| **总览** | 运行状态 · 账号池 · LS 健康 · 成功率 |
-| **登录取号** | Google / GitHub OAuth 一键登录 · 邮箱密码登录 · **测试代理** 按钮（实测出口 IP） |
-| **账号管理** | 加 / 删 / 停用 · 探测订阅等级 · 看余额 · 封禁模型黑名单 |
-| **模型控制** | 全局模型黑白名单 |
-| **代理配置** | 全局或单账号的 HTTP / SOCKS5 代理 |
-| **日志** | 实时 SSE 串流 · 按级别筛 · 每条 `turns=N chars=M` 诊断多轮 |
-| **统计分析** | 时间范围 6h / 24h / 72h · 账号维度 · p50 / p95 延迟 |
-| **实验性** | Cascade 对话复用 · **模型身份注入（每厂商可自定义 prompt）** |
+| **Огляд** | Стан системи · Пул акаунтів · Здоров'я LS · Рівень успішності |
+| **Вхід / Отримати токен** | Google / GitHub OAuth вхід одним кліком · Вхід за email/паролем · **Кнопка "Test Proxy"** (тестує вихідну IP) |
+| **Керування акаунтами** | Додати / Видалити / Вимкнути · Визначити рівень підписки · Перевірити баланс · Заблокувати моделі через чорний список |
+| **Керування моделями** | Глобальний білий/чорний список моделей |
+| **Налаштування проксі** | Глобальний або периакаунтний HTTP / SOCKS5 проксі |
+| **Логи** | SSE-потік у реальному часі · Фільтр за рівнем · `turns=N chars=M` діагностика |
+| **Статистика** | Часовий діапазон 6год / 24год / 72год · Деталізація за акаунтами · p50 / p95 затримки |
+| **Експериментальне** | Cascade conversation reuse · **Model Identity Injection** |
 
-## 支持的模型
+## Підтримувані моделі
 
-主线 100+ 个静态模型 + Windsurf 雲端動態下發（`mergeCloudModels` 啟動時拉取最新）。完整列表查 `GET /v1/models`，或看 [GitHub Pages 模型清单](https://dwgx.github.io/WindsurfAPI/#models)（同步生成於 `src/models.js`）。
+100+ статичних моделей в основному каталозі плюс динамічні хмарні моделі, додані під час запуску через `mergeCloudModels`. Повний список: `GET /v1/models`, або перегляньте [каталог моделей на GitHub Pages](https://dwgx.github.io/WindsurfAPI/#models) (автоматично генерується з `src/models.js`).
 
 <details>
-<summary><b>Claude（Anthropic）</b> — 21 个</summary>
+<summary><b>Claude (Anthropic)</b> — 21 модель</summary>
 
-claude-3.5-sonnet / 3.7-sonnet / thinking · claude-4-sonnet / opus / thinking · claude-4.1-opus · claude-4.5-haiku / sonnet / opus · claude-sonnet-4.6（含 1m / thinking / thinking-1m） · claude-opus-4.6 / thinking · **claude-opus-4.7-medium**
+claude-3.5-sonnet / 3.7-sonnet / thinking · claude-4-sonnet / opus / thinking · claude-4.1-opus · claude-4.5-haiku / sonnet / opus · claude-sonnet-4.6 (вкл. 1m / thinking / thinking-1m) · claude-opus-4.6 / thinking · **claude-opus-4.7-medium**
 
 </details>
 
 <details>
-<summary><b>GPT（OpenAI）</b> — 55 个</summary>
+<summary><b>GPT (OpenAI)</b> — 55 моделей</summary>
 
-gpt-4o · gpt-4.1 · gpt-5 全系（含 medium / high / codex） · **gpt-5.1 全系**（base / low / medium / high + fast + codex 全 6 變體） · **gpt-5.2 全系**（none / low / medium / high / xhigh + fast + codex 全 5 變體） · **gpt-5.4 全系**（base / mini × low/medium/high/xhigh） · o3 全系（base / mini / pro） · o4-mini
-
-</details>
-
-<details>
-<summary><b>Gemini（Google）</b> — 9 个</summary>
-
-gemini-2.5-pro / flash · gemini-3.0-pro / flash（minimal / low / medium / high 4 個 reasoning 等級） · gemini-3.1-pro（low / high）
+gpt-4o · gpt-4.1 · gpt-5 серія (вкл. medium / high / codex) · **gpt-5.1 серія** (base / low / medium / high + fast + codex, всі 6 варіантів) · **gpt-5.2 серія** (none / low / medium / high / xhigh + fast + codex) · **gpt-5.4 серія** (base / mini × low/medium/high/xhigh) · o3 серія (base / mini / pro) · o4-mini
 
 </details>
 
 <details>
-<summary><b>开源 / 国产</b></summary>
+<summary><b>Gemini (Google)</b> — 9 моделей</summary>
+
+gemini-2.5-pro / flash · gemini-3.0-pro / flash (minimal / low / medium / high — 4 рівні міркувань) · gemini-3.1-pro (low / high)
+
+</details>
+
+<details>
+<summary><b>Відкриті / китайські провайдери</b></summary>
 
 **Kimi**: kimi-k2 / k2.5 / k2-6 · **GLM**: glm-4.7 / 5 / 5.1 · **Qwen**: qwen-3 · **Grok**: grok-3 / grok-3-mini-thinking / grok-code-fast-1 · **MiniMax**: minimax-m2.5
 
 </details>
 
 <details>
-<summary><b>Windsurf 自家 + Arena</b></summary>
+<summary><b>Windsurf власні + Arena</b></summary>
 
 swe-1.5 / 1.5-fast / 1.6 / 1.6-fast · arena-fast · arena-smart
 
 </details>
 
-> **免费账号 entitled 模型**主要是 `gemini-2.5-flash`、`glm-4.7`、`glm-5` / `5.1`、`kimi-k2` / `k2.5` / `k2-6`、`qwen-3` 等开源系列；Claude / GPT 全系 + Opus 系列要 Pro。具体每个账号的 entitled 清单看 dashboard。
+> **Доступні моделі для безкоштовних акаунтів** зазвичай включають `gemini-2.5-flash`, `glm-4.7` / `glm-5` / `5.1`, `kimi-k2` / `k2.5` / `k2-6`, `qwen-3` тощо; сімейство Claude, GPT та Opus / thinking варіанти потребують Pro. Точний список кожного акаунта відображається в Dashboard.
 >
-> **工具调用稳定性**（v2.0.82+ 实测）：Claude family 走 `<tool_use>` 协议最稳；GLM-4.7 / Kimi-K2.5 走 NLU 兜底 + 可选 retry 大部分 case 能调；GLM-5.1 在 cascade 后端不稳（经常空回复 textLen=0），proxy 救不动；GPT 在 cascade 协议层不传 tools[] schema 也救不全。Claude Code 调本地工具优先 `claude-haiku-4.5` / `claude-sonnet-4.6`。
+> **Надійність викликів інструментів (виміряно v2.0.82+):** Сімейство Claude найнадійніше; GLM-4.7 / Kimi-K2.5 працюють у більшості випадків; GLM-5.1 ненадійний на cascade-бекенді; GPT також обмежений. Для Claude Code / Cline / Codex рекомендовано `claude-haiku-4.5` або `claude-sonnet-4.6`.
 
-## 架构要点
+### Мовна підтримка
 
-- **零 npm 依赖** 全走 `node:*` 内置 · protobuf 手搓（`src/proto.js`）· 下载即跑
-- **账号池 + LS 池** 每个独立 proxy 一个 LS 实例 不混用
-- **NO_TOOL 模式** `planner_mode=3` 关掉 Cascade 内置工具循环，避免 `/tmp/windsurf-workspace/` 路径泄漏
-- **三层 sanitize** LS 内建工具结果过滤 · `<tool_call>` 文本解析 · 输出路径清洗
-- **真实 token 计量** 从 `CortexStepMetadata.model_usage` 抓 Cascade 真实 `inputTokens` / `outputTokens` / `cacheRead` / `cacheWrite`，`prompt_tokens` 含 cacheWrite
+Сервіс автоматично визначає китайські, японські або корейські символи у ваших повідомленнях і додає підказку для відповіді тією самою мовою. Українська мова передається як звичайний текст — моделі відповідають мовою запиту.
 
-## PM2 部署
+## Архітектурні особливості
+
+- **Zero npm-залежностей** Все використовує вбудовані модулі `node:*` · Protobuf створений вручну (`src/proto.js`) · Завантажте та запускайте.
+- **Пул акаунтів + Пул LS** Кожен незалежний проксі отримує власний LS-інстанс, без змішування.
+- **NO_TOOL Mode** `planner_mode=3` вимикає вбудований цикл інструментів Cascade.
+- **Трирівнева санітизація** Фільтрація результатів інструментів LS · Парсинг тексту `<tool_call>` · Очищення вихідних шляхів.
+- **Реальний підрахунок токенів** Отримує справжні `inputTokens` / `outputTokens` / `cacheRead` / `cacheWrite` з `CortexStepMetadata.model_usage`.
+
+## Розгортання через PM2
 
 ```bash
 npm install -g pm2
@@ -344,9 +437,9 @@ pm2 start src/index.js --name windsurf-api
 pm2 save && pm2 startup
 ```
 
-**不要**用 `pm2 restart`（会出僵尸进程），用一键更新脚本 `bash update.sh`。
+**Не використовуйте** `pm2 restart` (може створити zombie-процеси). Використовуйте скрипт оновлення `bash update.sh`.
 
-## 防火墙
+## Фаєрвол
 
 ```bash
 # Ubuntu
@@ -356,51 +449,51 @@ ufw allow 3003/tcp
 firewall-cmd --add-port=3003/tcp --permanent && firewall-cmd --reload
 ```
 
-云服务器记得去安全组开 3003。
+Не забудьте відкрити порт 3003 у групі безпеки вашого хмарного провайдера.
 
-## 常见问题
+## Поширені запитання
 
-**Q: 登录报"邮箱或密码错误"**
-A: 你是用 Google/GitHub 登录的 Windsurf 吧 那种账号没有密码。Dashboard 的登录取号面板现在直接支持 Google / GitHub OAuth 一键登录。
+**П: Вхід не вдається з помилкою "Invalid email or password"**
+В: Ймовірно, ви зареєструвалися у Windsurf через Google/GitHub, що означає, що ваш акаунт не має пароля. Панель Dashboard тепер безпосередньо підтримує вхід одним кліком через Google/GitHub OAuth.
 
-**Q: 模型说"我无法操作文件系统"**
-A: 这是 **chat API**，不是 IDE agent。要让模型真的改文件，用 **Claude Code / Cline / Cursor / Aider** 之类的客户端 CLI，把它们的 API base URL 指向本服务就行。模型出 tool_use，客户端本地执行，再把 tool_result 发回来。上面的图有详细流程。
+**П: Модель каже "I cannot operate on the file system"**
+В: Це **чат-API**, а не IDE-агент. Щоб модель могла змінювати файли, використовуйте клієнтський CLI як **Claude Code / Cline / Cursor / Aider** і вкажіть URL API цього сервісу. Модель буде генерувати `tool_use`, клієнт виконає його локально та надішле `tool_result` назад. Діаграма вище показує детальний потік.
 
-**Q: 上下文丢失 / 模型忘了前面说的**
-A: 多账号轮询**不会**丢上下文 — 每次请求都重新打包完整 history 发给 Cascade。真正的原因通常是中转层（new-api 等）没把完整 `messages[]` 透传过来。在 Dashboard 日志面板看 `turns=N`：如果多轮对话但 `turns=1`，就是中转层在你之前就把历史丢了。
+**П: Контекст втрачається / Модель забуває попередні частини розмови**
+В: Round-robin між акаунтами **не** втрачає контекст — кожен запит перепаковує повну історію та надсилає її до Cascade. Справжня причина зазвичай у проміжному шарі (наприклад, new-api), який не передає повний масив `messages[]`. Перевірте `turns=N` у логах Dashboard: якщо це багатообертова розмова, але `turns=1`, значить шар перед вами вже відкинув історію.
 
-**Q: 长 prompt 超时**
-A: 已修。cold stall 检测按输入长度自适应，长输入最多给 90s。
+**П: Довгі запити вичерпують час**
+В: Це виправлено. Виявлення холодного зависання тепер адаптивне до довжини введення, з максимальним таймаутом 90 секунд для довгих введень.
 
-**Q: Claude Code 能用吗**
-A: 能。`export ANTHROPIC_BASE_URL=http://你的API` + `export ANTHROPIC_API_KEY=你的key`。`/v1/messages` 支持 system + tools + tool_use + tool_result + stream + multi-turn 全套，已实测通过。
+**П: Чи можна використовувати Claude Code?**
+В: Так. `export ANTHROPIC_BASE_URL=http://YOUR_API` + `export ANTHROPIC_API_KEY=YOUR_KEY`. `/v1/messages` підтримує повний набір: system, tools, tool_use, tool_result, stream та багатообертові розмови — все протестовано та працює.
 
-**Q: 免费账号能用什么模型**
-A: 主要是 `gemini-2.5-flash`、`glm-4.7` / `5` / `5.1`、`kimi-k2` / `k2.5` / `k2-6`、`qwen-3` 这些开源系列。Claude family + GPT 全系 + Opus / Max / Thinking 高阶模型要 Pro entitlement。具体每个账号的 entitled 清单 dashboard 里看 — `model_not_entitled` 错误返回的 `available_in_pool` 字段也会列出账号池能用的。
+**П: Які моделі доступні безкоштовним акаунтам?**
+В: Переважно `gemini-2.5-flash`, `glm-4.7` / `5` / `5.1`, `kimi-k2` / `k2.5` / `k2-6`, `qwen-3` (відкриті моделі). Сімейство Claude, GPT та Opus / Max / -thinking варіанти потребують Pro. Dashboard показує список доступних моделей для кожного акаунта.
 
-**Q: 免费账号调工具稳吗**
-A: 看模型。Claude family `<tool_use>` 协议训练扎实最稳（free 账号若 entitled 也是优选）；GLM-4.7 / Kimi-K2.5 走 NLU 兜底 + `WINDSURFAPI_NLU_RETRY=1` retry-with-correction 多数 case 能调；GLM-5.1 在 cascade 后端经常空回复 proxy 救不动；GPT 系列受 cascade 协议层限制（不传 OpenAI tools[] schema）也不稳。**Claude Code / Cline / Codex 调本地文件 / 跑命令优先 `claude-haiku-4.5` 或 `claude-sonnet-4.6`**。
+**П: Чи надійні виклики інструментів на безкоштовних акаунтах?**
+В: Залежить від моделі. Сімейство Claude найнадійніше. GLM-4.7 / Kimi-K2.5 працюють у більшості випадків. GLM-5.1 ненадійний на cascade-бекенді — проксі не може це виправити. **Для Claude Code / Cline / Codex рекомендовано `claude-haiku-4.5` або `claude-sonnet-4.6`.**
 
-**Q: 31 个 trial 账号一会儿就全 unavailable**
-A: 八成是用了周限模型 — `claude-opus-4-7-max` / `gpt-5.5-xhigh` / `claude-sonnet-4-7-thinking` 这类高 reasoning effort 变体每个账号每周只有 5 次配额，31 号 × 5 次 ≈ 150 次就到顶。换 `claude-sonnet-4.6` / `claude-haiku-4.5` daily 配额比较宽松。`docker logs windsurfapi-windsurf-api-1 | grep rate_limit` 看每个账号的 cooldown 字段验证。
+**П: 31 пробний акаунт стають недоступними після кількох сотень викликів**
+В: Ймовірно, модель використовує тижневу квоту — `claude-opus-4-7-max` / `gpt-5.5-xhigh` / `claude-sonnet-4-7-thinking` тощо обмежені до 5 викликів на тиждень на акаунт. Перейдіть на `claude-sonnet-4.6` / `claude-haiku-4.5` (денні квоти значно більші).
 
-## 贡献者
+## Контриб'ютори
 
-特别感谢下面的朋友，他们提交过 PR 或系统性地审了代码，让这个项目变得更稳：
+Величезна подяка наступним людям, які надіслали pull request'и або систематично аудитували код:
 
 - [@dd373156](https://github.com/dd373156) — [PR #1](https://github.com/dwgx/WindsurfAPI/pull/1)
-  修复 Pro 层级的模型合并逻辑：原本只看硬编码清单，云端动态拉回来的模型没进 tier 表，Pro 账号在 Cursor / Cherry Studio 里看不到新上线的模型。
+  Виправлення логіки об'єднання моделей Pro-рівня.
 - [@colin1112a](https://github.com/colin1112a) — [PR #13](https://github.com/dwgx/WindsurfAPI/pull/13)
-  一次性审了 15 个安全 / 并发 / 资源管理 bug：XSS 转义、shell 注入、OOM 防护、auth 路由位置、gRPC 双回调、LS pool 竞态、HTTP/2 帧大小上限等。后续我们在这个基础上又加固了 JS-level `escJsAttr`、`_pending` 合并并发 `ensureLs`、LS 退出时释放 pooled session，并延伸修了 Antigravity 审计发现的 6 个问题。
+  Аудит безпеки: 15 виявлених помилок безпеки/конкуренції/ресурсів.
 - [@baily-zhang](https://github.com/baily-zhang) — [PR #36](https://github.com/dwgx/WindsurfAPI/pull/36) + [PR #45](https://github.com/dwgx/WindsurfAPI/pull/45)
-  Cascade reuse 的核心修复：stableTurns 指纹匹配 (#36) 解决了 0% 命中率；trajectory offset 增量拉取 (#45) 消除了多轮复用时的上下文膨胀。
+  Виправлення Cascade conversation reuse.
 - [@aict666](https://github.com/aict666) — [PR #44](https://github.com/dwgx/WindsurfAPI/pull/44)
-  修复 chat 调用后 inferTier 把 Pro/Trial 账号降级为 free 的 bug，保护了 GetUserStatus 设定的权威 tier。
+  Виправлення inferTier.
 - [@smeinecke](https://github.com/smeinecke) — [PR #43](https://github.com/dwgx/WindsurfAPI/pull/43)
-  Dashboard 完整国际化：14 个 commit 覆盖中英文翻译、I18n 系统、check-i18n.js 校验工具。
+  Повна інтернаціоналізація Dashboard: 14 комітів, китайські/англійські переклади, I18n-система, check-i18n.js.
 
-想加入这份名单？欢迎提 [issue](https://github.com/dwgx/WindsurfAPI/issues) 或 [pull request](https://github.com/dwgx/WindsurfAPI/pulls)。Dashboard 左侧有"致谢"面板 能看到同样的信息。
+Бажаєте бути в цьому списку? Відкрийте [issue](https://github.com/dwgx/WindsurfAPI/issues) або [pull request](https://github.com/dwgx/WindsurfAPI/pulls). У Dashboard є панель Credits ліворуч, яка показує ту саму інформацію.
 
-## 授权
+## Ліцензія
 
 MIT
