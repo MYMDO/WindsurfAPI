@@ -32,7 +32,7 @@ if [ -f .env ]; then
   _lp="$(grep -oP '(?<=LS_BINARY_PATH=).+' .env 2>/dev/null | head -1)"
   [ -n "$_lp" ] && LS_PATH="$_lp"
 fi
-RELEASE_URL="https://github.com/dwgx/WindsurfAPI/releases/latest/download/language_server_linux_x64"
+RELEASE_URL="https://github.com/MYMDO/WindsurfAPI/releases/latest/download/language_server_linux_x64"
 if [ -f "$LS_PATH" ]; then
   LOCAL_SIZE=$(stat --format=%s "$LS_PATH" 2>/dev/null || stat -f%z "$LS_PATH" 2>/dev/null || echo 0)
   REMOTE_SIZE=$(curl -sI -L "$RELEASE_URL" 2>/dev/null | grep -i content-length | tail -1 | tr -dc '0-9')

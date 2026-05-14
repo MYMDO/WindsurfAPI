@@ -87,7 +87,7 @@ sequenceDiagram
 ### One-Click Deployment
 
 ```bash
-git clone https://github.com/dwgx/WindsurfAPI.git
+git clone https://github.com/MYMDO/WindsurfAPI.git
 cd WindsurfAPI
 bash setup.sh          # Create directories · Set permissions · Generate .env
 node src/index.js
@@ -130,7 +130,7 @@ If you are using our public instances (`skiapi.dev`, etc.), you don't need to do
 ### Manual Installation
 
 ```bash
-git clone https://github.com/dwgx/WindsurfAPI.git
+git clone https://github.com/MYMDO/WindsurfAPI.git
 cd WindsurfAPI
 
 # Language Server binary — auto-detects Linux/macOS, one-click download + chmod
@@ -300,7 +300,7 @@ Open `http://YOUR_IP:3003/dashboard`:
 
 ## Supported Models
 
-100+ static models in the main catalog plus dynamic cloud-side models added at startup via `mergeCloudModels`. Full list: `GET /v1/models`, or browse the [GitHub Pages model catalog](https://dwgx.github.io/WindsurfAPI/#models) (auto-generated from `src/models.js`).
+100+ static models in the main catalog plus dynamic cloud-side models added at startup via `mergeCloudModels`. Full list: `GET /v1/models`, or browse the [GitHub Pages model catalog](https://mymdo.github.io/WindsurfAPI/#models) (auto-generated from `src/models.js`).
 
 <details>
 <summary><b>Claude (Anthropic)</b> — 21 models</summary>
@@ -416,7 +416,7 @@ Huge thanks to the following folks who sent pull requests or systematically audi
 - [@smeinecke](https://github.com/smeinecke) — [PR #43](https://github.com/dwgx/WindsurfAPI/pull/43)
   Full Dashboard i18n: 14 commits covering Chinese/English translations, I18n system, and check-i18n.js validation tool.
 
-Want to be on this list? Open an [issue](https://github.com/dwgx/WindsurfAPI/issues) or a [pull request](https://github.com/dwgx/WindsurfAPI/pulls). The dashboard has a Credits panel on the left that shows the same info.
+Want to be on this list? Open an [issue](https://github.com/MYMDO/WindsurfAPI/issues) or a [pull request](https://github.com/MYMDO/WindsurfAPI/pulls). The dashboard has a Credits panel on the left that shows the same info.
 
 ## License
 

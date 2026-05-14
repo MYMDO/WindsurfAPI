@@ -11,7 +11,7 @@
 # Override install path with LS_INSTALL_PATH env var.
 set -euo pipefail
 
-OUR_RELEASE='https://github.com/dwgx/WindsurfAPI/releases/latest/download'
+OUR_RELEASE='https://github.com/MYMDO/WindsurfAPI/releases/latest/download'
 EXAFUNCTION_API='https://api.github.com/repos/Exafunction/codeium/releases/latest'
 # v2.0.93: windsurf-linux-server-release extracts LS from official Windsurf desktop builds.
 WINDSURF_LS_RELEASE='https://github.com/CaiJingLong/windsurf-linux-server-release/releases/latest/download'

@@ -85,7 +85,7 @@
 ### 一键部署
 
 ```bash
-git clone https://github.com/dwgx/WindsurfAPI.git
+git clone https://github.com/MYMDO/WindsurfAPI.git
 cd WindsurfAPI
 bash setup.sh          # 建目录 · 配权限 · 生成 .env
 node src/index.js
@@ -128,7 +128,7 @@ cd ~/WindsurfAPI && bash update.sh
 ### 手动安装
 
 ```bash
-git clone https://github.com/dwgx/WindsurfAPI.git
+git clone https://github.com/MYMDO/WindsurfAPI.git
 cd WindsurfAPI
 
 # Language Server 二进制 —— 自动检测 Linux/macOS，一键下载 + chmod
@@ -288,7 +288,7 @@ curl http://localhost:3003/v1/messages \
 
 ## 支持的模型
 
-主线 100+ 个静态模型 + Windsurf 雲端動態下發（`mergeCloudModels` 啟動時拉取最新）。完整列表查 `GET /v1/models`，或看 [GitHub Pages 模型清单](https://dwgx.github.io/WindsurfAPI/#models)（同步生成於 `src/models.js`）。
+主线 100+ 个静态模型 + Windsurf 雲端動態下發（`mergeCloudModels` 啟動時拉取最新）。完整列表查 `GET /v1/models`，或看 [GitHub Pages 模型清单](https://mymdo.github.io/WindsurfAPI/#models)（同步生成於 `src/models.js`）。
 
 <details>
 <summary><b>Claude（Anthropic）</b> — 21 个</summary>
@@ -400,7 +400,7 @@ A: 八成是用了周限模型 — `claude-opus-4-7-max` / `gpt-5.5-xhigh` / `cl
 - [@smeinecke](https://github.com/smeinecke) — [PR #43](https://github.com/dwgx/WindsurfAPI/pull/43)
   Dashboard 完整国际化：14 个 commit 覆盖中英文翻译、I18n 系统、check-i18n.js 校验工具。
 
-想加入这份名单？欢迎提 [issue](https://github.com/dwgx/WindsurfAPI/issues) 或 [pull request](https://github.com/dwgx/WindsurfAPI/pulls)。Dashboard 左侧有"致谢"面板 能看到同样的信息。
+想加入这份名单？欢迎提 [issue](https://github.com/MYMDO/WindsurfAPI/issues) 或 [pull request](https://github.com/MYMDO/WindsurfAPI/pulls)。Dashboard 左侧有"致谢"面板 能看到同样的信息。
 
 ## 授权
 

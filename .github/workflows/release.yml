@@ -33,7 +33,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # github.repository (= dwgx/WindsurfAPI) lowercases to "windsurfapi"
+          # github.repository (= MYMDO/WindsurfAPI) lowercases to "windsurfapi"
           # without the hyphen the package.json npm name uses. Hardcode the
           # kebab form so the image name stays "windsurf-api".
           images: ghcr.io/${{ github.repository_owner }}/windsurf-api

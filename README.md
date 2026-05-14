@@ -376,7 +376,7 @@ curl http://localhost:3003/v1/messages \
 
 ## Підтримувані моделі
 
-100+ статичних моделей в основному каталозі плюс динамічні хмарні моделі, додані під час запуску через `mergeCloudModels`. Повний список: `GET /v1/models`, або перегляньте [каталог моделей на GitHub Pages](https://dwgx.github.io/WindsurfAPI/#models) (автоматично генерується з `src/models.js`).
+100+ статичних моделей в основному каталозі плюс динамічні хмарні моделі, додані під час запуску через `mergeCloudModels`. Повний список: `GET /v1/models`, або перегляньте [каталог моделей на GitHub Pages](https://mymdo.github.io/WindsurfAPI/#models) (автоматично генерується з `src/models.js`).
 
 <details>
 <summary><b>Claude (Anthropic)</b> — 21 модель</summary>
@@ -492,7 +492,7 @@ firewall-cmd --add-port=3003/tcp --permanent && firewall-cmd --reload
 - [@smeinecke](https://github.com/smeinecke) — [PR #43](https://github.com/dwgx/WindsurfAPI/pull/43)
   Повна інтернаціоналізація Dashboard: 14 комітів, китайські/англійські переклади, I18n-система, check-i18n.js.
 
-Бажаєте бути в цьому списку? Відкрийте [issue](https://github.com/dwgx/WindsurfAPI/issues) або [pull request](https://github.com/dwgx/WindsurfAPI/pulls). У Dashboard є панель Credits ліворуч, яка показує ту саму інформацію.
+Бажаєте бути в цьому списку? Відкрийте [issue](https://github.com/MYMDO/WindsurfAPI/issues) або [pull request](https://github.com/MYMDO/WindsurfAPI/pulls). У Dashboard є панель Credits ліворуч, яка показує ту саму інформацію.
 
 ## Ліцензія
 

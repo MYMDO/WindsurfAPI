@@ -8,7 +8,7 @@ Public issues are indexed by search engines and watched by forks — disclosing 
 
 Instead, report privately via one of:
 
-- GitHub Security Advisories: <https://github.com/dwgx/WindsurfAPI/security/advisories/new> (preferred — encrypted, tracks the fix)
+- GitHub Security Advisories: <https://github.com/MYMDO/WindsurfAPI/security/advisories/new> (preferred — encrypted, tracks the fix)
 - Email: `somdhmtb@gmail.com` with subject prefix `[WindsurfAPI Security]`
 
 Please include:
@@ -40,7 +40,7 @@ You can expect a first response within **72 hours**. Valid reports will be credi
 
 请用下面任一方式私下报告：
 
-- GitHub Security Advisories（推荐，加密、跟进修复）：<https://github.com/dwgx/WindsurfAPI/security/advisories/new>
+- GitHub Security Advisories（推荐，加密、跟进修复）：<https://github.com/MYMDO/WindsurfAPI/security/advisories/new>
 - 邮件：`somdhmtb@gmail.com`，标题前缀 `[WindsurfAPI Security]`
 
 请附上：
