@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Windsurf API · 把 Windsurf 變成 OpenAI + Anthropic 相容端點</title>
-<meta name="description" content="無頭運行 Windsurf 的 AI 模型，同時支援 /v1/chat/completions 與 /v1/messages 雙協定。Claude Code、Cursor、Cline 直接連。零 npm 依賴。">
+<title>Windsurf API · OpenAI- та Anthropic-сумісний ендпойнт для моделей Windsurf</title>
+<meta name="description" content="Запускайте AI-моделі Windsurf у headless-режимі. Одночасна підтримка обох протоколів: /v1/chat/completions та /v1/messages. Пряме підключення Claude Code, Cursor, Cline. Без npm-залежностей.">
 <meta name="theme-color" content="#FAF9F5">
 <meta property="og:title" content="Windsurf API">
-<meta property="og:description" content="雙協定 · 零依賴 · Docker 就緒">
+<meta property="og:description" content="Подвійний протокол · Без залежностей · Готовий Docker-образ">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E3%80%B0%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <style>
@@ -315,11 +315,11 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
   <div class="nav-inner">
     <a href="#" class="logo">Windsurf API</a>
     <div class="nav-links">
-      <a href="#protocols">雙協定</a>
-      <a href="#models">模型</a>
-      <a href="#architecture">架構</a>
-      <a href="#deploy">部署</a>
-      <a href="#dashboard">管理</a>
+      <a href="#protocols">Протоколи</a>
+      <a href="#models">Моделі</a>
+      <a href="#architecture">Архітектура</a>
+      <a href="#deploy">Розгортання</a>
+      <a href="#dashboard">Адмінпанель</a>
       <a href="#faq">FAQ</a>
     </div>
     <a href="https://github.com/dwgx/WindsurfAPI" class="nav-cta" target="_blank" rel="noopener">
@@ -333,29 +333,29 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section class="hero">
   <div class="container">
     <div class="hero-inner reveal">
-      <div class="hero-badge">v1.5.0 — Docker + SOCKS5 + 工具調用修復</div>
+      <div class="hero-badge">v1.5.0 — Docker + SOCKS5 + виправлення викликів інструментів</div>
       <h1>
-        把 <em>Windsurf</em> 的 AI 模型<br>
-        變成你熟悉的 <span class="hl">API</span>。
+        Перетворіть AI-моделі <em>Windsurf</em><br>
+        на звичний вам <span class="hl">API</span>.
       </h1>
       <p class="lede">
-        同時支援 <code>/v1/chat/completions</code> 與 <code>/v1/messages</code> 雙協定。Claude Code、Cursor、Cline 直接連。零 npm 依賴，Docker 一鍵部署。
+        Одночасна підтримка двох протоколів: <code>/v1/chat/completions</code> та <code>/v1/messages</code>. Claude Code, Cursor, Cline підключаються напряму. Без npm-залежностей, розгортання у Docker одним кліком.
       </p>
       <div class="hero-cta">
         <a href="#deploy" class="btn btn-primary">
-          開始部署
+          Розпочати розгортання
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h8M8 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
         <a href="https://github.com/dwgx/WindsurfAPI" class="btn btn-ghost" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.64 7.64 0 014 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          查看原始碼
+          Переглянути вихідний код
         </a>
       </div>
       <div class="hero-meta">
-        <span>零 npm 依賴</span>
+        <span>Без npm-залежностей</span>
         <span>Node.js &ge; 20</span>
-        <span>MIT License</span>
-        <span>Docker 就緒</span>
+        <span>Ліцензія MIT</span>
+        <span>Готовий Docker-образ</span>
       </div>
     </div>
   </div>
@@ -365,10 +365,10 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section class="stats" style="padding:2.5rem 0">
   <div class="container">
     <div class="stats-grid">
-      <div class="stat reveal"><div class="num" id="stat-models">0</div><div class="label">AI 模型</div></div>
-      <div class="stat reveal"><div class="num">9</div><div class="label">供應商</div></div>
-      <div class="stat reveal"><div class="num">2</div><div class="label">相容協定</div></div>
-      <div class="stat reveal"><div class="num">0</div><div class="label">npm 依賴</div></div>
+      <div class="stat reveal"><div class="num" id="stat-models">0</div><div class="label">AI-моделей</div></div>
+      <div class="stat reveal"><div class="num">9</div><div class="label">провайдерів</div></div>
+      <div class="stat reveal"><div class="num">2</div><div class="label">сумісні протоколи</div></div>
+      <div class="stat reveal"><div class="num">0</div><div class="label">залежностей npm</div></div>
     </div>
   </div>
 </section>
@@ -377,15 +377,15 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section class="dual-protocol" id="protocols">
   <div class="container">
     <div class="reveal">
-      <div class="kicker">雙協定 · Dual Protocol</div>
-      <h2 class="section-title">同一個伺服器，<em>兩套標準</em>。</h2>
-      <p class="section-sub">不管你手上的客戶端走 OpenAI 還是 Anthropic 協定，指向同一個 Windsurf API 實例就能用。</p>
+      <div class="kicker">Подвійний протокол · Dual Protocol</div>
+      <h2 class="section-title">Один сервер, <em>два стандарти</em>.</h2>
+      <p class="section-sub">Незалежно від того, який протокол використовує ваш клієнт — OpenAI чи Anthropic — спрямуйте його на той самий екземпляр Windsurf API.</p>
     </div>
 
     <div class="proto-grid reveal">
       <div class="proto-card">
         <div class="proto-head">
-          <div class="proto-brand"><span class="logo-chip openai">S</span><h4>OpenAI 相容</h4></div>
+          <div class="proto-brand"><span class="logo-chip openai">S</span><h4>Сумісність з OpenAI</h4></div>
           <span class="proto-meta">POST /v1/chat/completions</span>
         </div>
 <pre class="proto-body"><span class="c-prompt">$</span> <span class="c-cmd">curl</span> http://localhost:3003<span class="c-str">/v1/chat/completions</span> \
@@ -397,12 +397,12 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
     ],
     <span class="c-key">"stream"</span>: true
   }'</span>
-<span class="c-com"># → Server-Sent Events (OpenAI chunk 格式)</span></pre>
+<span class="c-com"># → Server-Sent Events (формат OpenAI chunk)</span></pre>
       </div>
 
       <div class="proto-card">
         <div class="proto-head">
-          <div class="proto-brand"><span class="logo-chip anthropic">A</span><h4>Anthropic 相容</h4></div>
+          <div class="proto-brand"><span class="logo-chip anthropic">A</span><h4>Сумісність з Anthropic</h4></div>
           <span class="proto-meta">POST /v1/messages</span>
         </div>
 <pre class="proto-body"><span class="c-prompt">$</span> <span class="c-cmd">curl</span> http://localhost:3003<span class="c-str">/v1/messages</span> \
@@ -414,12 +414,12 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
     ],
     <span class="c-key">"stream"</span>: true
   }'</span>
-<span class="c-com"># → SSE (Anthropic message_delta 格式)</span></pre>
+<span class="c-com"># → SSE (формат Anthropic message_delta)</span></pre>
       </div>
     </div>
 
     <div class="note reveal">
-      <strong>同一個請求體格式、同一個帳號池、同一個速率限制器</strong>——切換協定只是換路由前綴。Claude Code、Cline 吃 <code>/v1/messages</code>，Cursor/OpenAI SDK 吃 <code>/v1/chat/completions</code>，互不干擾。
+      <strong>Єдиний формат тіла запиту, спільний пул акаунтів, спільний обмежувач частоти</strong> — перемикання протоколу зводиться до зміни префіксу маршруту. Claude Code та Cline працюють через <code>/v1/messages</code>, Cursor і OpenAI SDK — через <code>/v1/chat/completions</code>, не заважаючи один одному.
     </div>
   </div>
 </section>
@@ -428,13 +428,13 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section class="models-section" id="models">
   <div class="container">
     <div class="reveal">
-      <div class="kicker">模型 · Models</div>
-      <h2 class="section-title">一個 API 背後，<em>多個供應商</em>。</h2>
-      <p class="section-sub">從 Claude Opus 到 GPT-5、從 Gemini 3 到 DeepSeek R1，9 個供應商的模型統一接入。</p>
+      <div class="kicker">Моделі · Models</div>
+      <h2 class="section-title">Один API, <em>безліч провайдерів</em>.</h2>
+      <p class="section-sub">Від Claude Opus до GPT-5, від Gemini 3 до DeepSeek R1 — моделі від дев'яти провайдерів через єдиний інтерфейс.</p>
     </div>
 
     <div class="model-filters reveal" id="model-filters">
-      <button class="filter-btn active" data-filter="all">全部 <span class="count" id="count-all">0</span></button>
+      <button class="filter-btn active" data-filter="all">Усі <span class="count" id="count-all">0</span></button>
       <button class="filter-btn" data-filter="anthropic">Claude <span class="count" id="count-anthropic">0</span></button>
       <button class="filter-btn" data-filter="openai">GPT <span class="count" id="count-openai">0</span></button>
       <button class="filter-btn" data-filter="google">Gemini <span class="count" id="count-google">0</span></button>
@@ -444,16 +444,16 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
       <button class="filter-btn" data-filter="zhipu">GLM <span class="count" id="count-zhipu">0</span></button>
       <button class="filter-btn" data-filter="minimax">MiniMax <span class="count" id="count-minimax">0</span></button>
       <button class="filter-btn" data-filter="windsurf">SWE / Arena <span class="count" id="count-windsurf">0</span></button>
-      <button class="filter-btn" data-filter="thinking">思考型 <span class="count" id="count-thinking">0</span></button>
-      <button class="filter-btn" data-filter="free">免費 <span class="count" id="count-free">0</span></button>
+      <button class="filter-btn" data-filter="thinking">Мислення <span class="count" id="count-thinking">0</span></button>
+      <button class="filter-btn" data-filter="free">Безкоштовні <span class="count" id="count-free">0</span></button>
     </div>
 
     <div class="model-grid reveal" id="model-grid"></div>
 
     <div class="note reveal">
-      <strong>免費帳號：</strong>僅支援 <code>gemini-2.5-flash</code>（<code>gpt-4o-mini</code> 已被 Windsurf 下架）。其餘模型需 Windsurf Pro 訂閱。<br>
-      <strong>看不到最新模型？</strong>你的 Language Server binary 可能落後 Windsurf 雲端，從桌面端拷貝最新版 LS 覆蓋即可——<code>/v1/models</code> 會自動從雲端發現新模型。<br>
-      <strong>模型清單怎麼更新？</strong>本頁面上的清單由 <code>scripts/gen-docs-models.js</code> 從 <code>src/models.js</code> 自動生成，不會與後端漂移。
+      <strong>Безкоштовний акаунт:</strong> підтримується лише <code>gemini-2.5-flash</code> (<code>gpt-4o-mini</code> Windsurf уже зняв із підтримки). Решта моделей потребують підписки Windsurf Pro.<br>
+      <strong>Не бачите найновіших моделей?</strong> Ваш бінарник Language Server може відставати від хмари Windsurf — скопіюйте найновіший LS із десктопного застосунку поверх існуючого, і <code>/v1/models</code> автоматично виявить нові моделі.<br>
+      <strong>Як оновлюється перелік моделей?</strong> Список на цій сторінці генерується з <code>src/models.js</code> через <code>scripts/gen-docs-models.js</code> і завжди синхронізований з бекендом.
     </div>
   </div>
 </section>
@@ -462,9 +462,9 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section id="architecture" class="arch-section">
   <div class="container">
     <div class="reveal">
-      <div class="kicker">架構 · Architecture</div>
-      <h2 class="section-title">中間多一層，<em>全都接住</em>。</h2>
-      <p class="section-sub">請求從客戶端出發，經過協定翻譯、帳號池選號、工具仿真、路徑淨化，再由語言伺服器轉成 Protobuf 送到 Windsurf 雲端。回應原路返回，流式解析後交付。</p>
+      <div class="kicker">Архітектура · Architecture</div>
+      <h2 class="section-title">Один проміжний шар — <em>все під контролем</em>.</h2>
+      <p class="section-sub">Запит від клієнта проходить переклад протоколу, вибір акаунта з пулу, симуляцію інструментів та очищення шляхів. Далі Language Server перетворює його на Protobuf і надсилає у хмару Windsurf. Відповідь повертається тим самим маршрутом і передається у потоковому режимі.</p>
     </div>
 
     <div class="arch-canvas reveal">
@@ -498,7 +498,7 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
             </div>
             <div class="arch-nd-label">Node.js Proxy</div>
             <div class="arch-nd-title">Windsurf API</div>
-            <div class="arch-nd-sub">協定翻譯 · 帳號池輪詢<br>工具仿真 · 上下文複用<br>速率限制 · 故障轉移</div>
+            <div class="arch-nd-sub">Переклад протоколу · Ротація акаунтів<br>Симуляція інструментів · Повторне використання контексту<br>Обмеження частоти · Перемикання у разі збоїв</div>
           </div>
         </div>
 
@@ -518,7 +518,7 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
             </div>
             <div class="arch-nd-label">Binary · gRPC</div>
             <div class="arch-nd-title">Language Server</div>
-            <div class="arch-nd-sub">Windsurf LS 二進位<br>Proto 序列化 / 反序列化</div>
+            <div class="arch-nd-sub">Бінарник Windsurf LS<br>Серіалізація / десеріалізація Proto</div>
           </div>
         </div>
 
@@ -538,7 +538,7 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
             </div>
             <div class="arch-nd-label">Upstream</div>
             <div class="arch-nd-title">Windsurf Cloud</div>
-            <div class="arch-nd-sub">Cascade AI 引擎<br>100+ 模型推理</div>
+            <div class="arch-nd-sub">Рушій Cascade AI<br>Інференс 100+ моделей</div>
           </div>
         </div>
       </div>
@@ -547,34 +547,34 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
       <div class="arch-features reveal">
         <div class="arch-ft">
           <span class="arch-ft-dot"></span>
-          <div><div class="arch-ft-text">雙協定翻譯</div><div class="arch-ft-desc">OpenAI ↔ Anthropic ↔ Cascade</div></div>
+          <div><div class="arch-ft-text">Подвійний переклад протоколів</div><div class="arch-ft-desc">OpenAI ↔ Anthropic ↔ Cascade</div></div>
         </div>
         <div class="arch-ft">
           <span class="arch-ft-dot"></span>
-          <div><div class="arch-ft-text">多帳號池</div><div class="arch-ft-desc">輪詢 · 故障轉移 · 自動封禁偵測</div></div>
+          <div><div class="arch-ft-text">Пул кількох акаунтів</div><div class="arch-ft-desc">Ротація · Перемикання у разі збоїв · Автоматичне виявлення блокувань</div></div>
         </div>
         <div class="arch-ft">
           <span class="arch-ft-dot"></span>
-          <div><div class="arch-ft-text">工具仿真</div><div class="arch-ft-desc">Prompt 注入 · 三格式解析</div></div>
+          <div><div class="arch-ft-text">Симуляція інструментів</div><div class="arch-ft-desc">Ін'єкція у prompt · Парсинг трьох форматів</div></div>
         </div>
         <div class="arch-ft">
           <span class="arch-ft-dot"></span>
-          <div><div class="arch-ft-text">上下文複用</div><div class="arch-ft-desc">Fingerprint 池 · Cascade 會話快取</div></div>
+          <div><div class="arch-ft-text">Повторне використання контексту</div><div class="arch-ft-desc">Пул fingerprint · Кеш сесій Cascade</div></div>
         </div>
         <div class="arch-ft">
           <span class="arch-ft-dot"></span>
-          <div><div class="arch-ft-text">安全淨化</div><div class="arch-ft-desc">路徑剝離 · SSRF 防護 · Proto 截斷檢測</div></div>
+          <div><div class="arch-ft-text">Безпекове очищення</div><div class="arch-ft-desc">Видалення шляхів · Захист від SSRF · Виявлення обрізання Proto</div></div>
         </div>
         <div class="arch-ft">
           <span class="arch-ft-dot"></span>
-          <div><div class="arch-ft-text">SOCKS5 · Docker</div><div class="arch-ft-desc">每帳號獨立代理 · 容器化部署</div></div>
+          <div><div class="arch-ft-text">SOCKS5 · Docker</div><div class="arch-ft-desc">Окремий проксі для кожного акаунта · Контейнеризоване розгортання</div></div>
         </div>
       </div>
 
       <div class="arch-flow-label reveal">
-        <span class="arr req">請求流</span>
+        <span class="arr req">Потік запитів</span>
         <span style="color:#4A433B">·</span>
-        <span class="arr res">回應流</span>
+        <span class="arr res">Потік відповідей</span>
       </div>
     </div>
   </div>
@@ -584,22 +584,22 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section class="dashboard-section" id="dashboard">
   <div class="container">
     <div class="reveal">
-      <div class="kicker">管理後台 · Dashboard</div>
-      <h2 class="section-title">10 個面板，<em>帳號運維</em>全搞定。</h2>
-      <p class="section-sub">訪問 <code>/dashboard</code>，暗色 Web 介面。日誌即時串流、帳號一鍵登入、模型黑白名單、封禁偵測。</p>
+      <div class="kicker">Адмінпанель · Dashboard</div>
+      <h2 class="section-title">10 панелей — <em>повне керування акаунтами</em> в одному місці.</h2>
+      <p class="section-sub">Перейдіть на <code>/dashboard</code> — темний веб-інтерфейс із потоковими логами в реальному часі, входом в акаунт одним кліком, чорними та білими списками моделей і виявленням блокувань.</p>
     </div>
 
     <div class="panel-grid reveal">
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">1</div><h4>總覽</h4></div><p>運行時間、帳號池狀態、分模型成功率</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">2</div><h4>登入取號</h4></div><p>Email/密碼直接註冊，自動取得 Token</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">3</div><h4>帳號管理</h4></div><p>新增、刪除、停用、餘額 Credits 查詢</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">4</div><h4>模型控制</h4></div><p>全域與帳號層的模型白/黑名單</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">5</div><h4>代理配置</h4></div><p>全域及個別帳號 HTTP/SOCKS5 代理</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">6</div><h4>日誌檢視</h4></div><p>即時 SSE 串流，級別篩選，關鍵字高亮</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">7</div><h4>請求統計</h4></div><p>按模型/帳號維度的指標與圖表</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">8</div><h4>封禁偵測</h4></div><p>錯誤模式偵測，帳號健康自動監控</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">9</div><h4>自動更新</h4></div><p>一鍵 git pull + PM2 重啟服務</p></div>
-      <div class="panel-card"><div class="panel-head"><div class="panel-icon">10</div><h4>致謝</h4></div><p>Contributors 列表</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">1</div><h4>Огляд</h4></div><p>Аптайм, стан пулу акаунтів, успішність за моделями</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">2</div><h4>Реєстрація акаунта</h4></div><p>Пряма реєстрація через email/пароль з автоматичним отриманням токена</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">3</div><h4>Керування акаунтами</h4></div><p>Додавання, видалення, вимкнення, перевірка балансу credits</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">4</div><h4>Керування моделями</h4></div><p>Глобальні та індивідуальні білі/чорні списки моделей для кожного акаунта</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">5</div><h4>Налаштування проксі</h4></div><p>Глобальні та індивідуальні HTTP/SOCKS5-проксі для кожного акаунта</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">6</div><h4>Перегляд логів</h4></div><p>Реальний SSE-потік, фільтри за рівнем, підсвічування ключових слів</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">7</div><h4>Статистика запитів</h4></div><p>Метрики та графіки в розрізі моделей/акаунтів</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">8</div><h4>Виявлення блокувань</h4></div><p>Розпізнавання шаблонів помилок, автоматичне відстеження стану акаунтів</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">9</div><h4>Автоматичне оновлення</h4></div><p>git pull + перезапуск PM2 одним кліком</p></div>
+      <div class="panel-card"><div class="panel-head"><div class="panel-icon">10</div><h4>Подяки</h4></div><p>Список учасників</p></div>
     </div>
   </div>
 </section>
@@ -608,30 +608,30 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section class="deploy-section" id="deploy">
   <div class="container">
     <div class="reveal">
-      <div class="kicker">部署 · Deploy</div>
-      <h2 class="section-title">從零到跑起來，<em>五分鐘</em>。</h2>
-      <p class="section-sub">兩種方式任選。</p>
+      <div class="kicker">Розгортання · Deploy</div>
+      <h2 class="section-title">З нуля до робочого сервера — <em>п'ять хвилин</em>.</h2>
+      <p class="section-sub">Два способи на вибір.</p>
     </div>
 
     <div class="reveal">
       <div class="deploy-tabs">
-        <button class="deploy-tab active" data-tab="manual">手動部署</button>
+        <button class="deploy-tab active" data-tab="manual">Ручне розгортання</button>
         <button class="deploy-tab" data-tab="docker">Docker</button>
       </div>
 
       <div class="deploy-content active" id="tab-manual">
         <div class="deploy-steps">
           <div class="step"><div class="step-num"></div><div class="step-body">
-            <h3>安裝 Node.js 20+</h3>
-            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>複製</button></div>
+            <h3>Встановіть Node.js 20+</h3>
+            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>Копіювати</button></div>
 <pre><span class="c-prompt">$</span> <span class="c-cmd">curl</span> -fsSL https://deb.nodesource.com/setup_20.x | bash -
 <span class="c-prompt">$</span> <span class="c-cmd">apt install</span> -y nodejs</pre>
             </div>
           </div></div>
 
           <div class="step"><div class="step-num"></div><div class="step-body">
-            <h3>Clone + 安裝 Language Server</h3>
-            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>複製</button></div>
+            <h3>Клонуйте репозиторій та встановіть Language Server</h3>
+            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>Копіювати</button></div>
 <pre><span class="c-prompt">$</span> <span class="c-cmd">git clone</span> https://github.com/dwgx/WindsurfAPI.git
 <span class="c-prompt">$</span> <span class="c-cmd">cd</span> WindsurfAPI
 <span class="c-prompt">$</span> <span class="c-cmd">bash</span> install-ls.sh</pre>
@@ -639,24 +639,24 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
           </div></div>
 
           <div class="step"><div class="step-num"></div><div class="step-body">
-            <h3>設定 <code>.env</code></h3>
-            <div class="code-box"><div class="code-box-head"><span class="lang">.env</span><button class="copy-btn" data-copy>複製</button></div>
+            <h3>Налаштуйте <code>.env</code></h3>
+            <div class="code-box"><div class="code-box-head"><span class="lang">.env</span><button class="copy-btn" data-copy>Копіювати</button></div>
 <pre><span class="c-key">PORT</span>=<span class="c-str">3003</span>
-<span class="c-key">API_KEY</span>=                   <span class="c-com"># 留空 = 不驗證</span>
+<span class="c-key">API_KEY</span>=                   <span class="c-com"># порожнє = без перевірки</span>
 <span class="c-key">DEFAULT_MODEL</span>=<span class="c-str">claude-4.5-sonnet-thinking</span>
 <span class="c-key">LS_BINARY_PATH</span>=<span class="c-str">/opt/windsurf/language_server_linux_x64</span>
-<span class="c-key">DASHBOARD_PASSWORD</span>=         <span class="c-com"># 留空 = 後台免密碼</span></pre>
+<span class="c-key">DASHBOARD_PASSWORD</span>=         <span class="c-com"># порожнє = адмінпанель без пароля</span></pre>
             </div>
           </div></div>
 
           <div class="step"><div class="step-num"></div><div class="step-body">
-            <h3>啟動</h3>
-            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>複製</button></div>
+            <h3>Запустіть</h3>
+            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>Копіювати</button></div>
 <pre><span class="c-prompt">$</span> <span class="c-cmd">npm install</span> -g pm2
 <span class="c-prompt">$</span> <span class="c-cmd">pm2 start</span> src/index.js --name windsurf-api
 <span class="c-prompt">$</span> <span class="c-cmd">pm2 save</span> && <span class="c-cmd">pm2 startup</span></pre>
             </div>
-            <div class="note"><strong>一鍵更新：</strong><code>bash update.sh</code></div>
+            <div class="note"><strong>Оновлення одним кліком:</strong> <code>bash update.sh</code></div>
           </div></div>
         </div>
       </div>
@@ -664,8 +664,8 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
       <div class="deploy-content" id="tab-docker">
         <div class="deploy-steps">
           <div class="step"><div class="step-num"></div><div class="step-body">
-            <h3>準備配置</h3>
-            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>複製</button></div>
+            <h3>Підготуйте конфігурацію</h3>
+            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>Копіювати</button></div>
 <pre><span class="c-prompt">$</span> <span class="c-cmd">git clone</span> https://github.com/dwgx/WindsurfAPI.git
 <span class="c-prompt">$</span> <span class="c-cmd">cd</span> WindsurfAPI
 <span class="c-prompt">$</span> <span class="c-cmd">cp</span> .env.example .env</pre>
@@ -673,13 +673,13 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
           </div></div>
 
           <div class="step"><div class="step-num"></div><div class="step-body">
-            <h3>啟動容器</h3>
-            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>複製</button></div>
+            <h3>Запустіть контейнер</h3>
+            <div class="code-box"><div class="code-box-head"><span class="lang">bash</span><button class="copy-btn" data-copy>Копіювати</button></div>
 <pre><span class="c-prompt">$</span> <span class="c-cmd">docker compose</span> up -d --build
 <span class="c-prompt">$</span> <span class="c-cmd">docker compose</span> logs -f</pre>
             </div>
             <div class="note">
-              <strong>預設掛載：</strong><code>.docker-data/data</code> 持久化帳號/配置，<code>.docker-data/opt/windsurf</code> 放 LS binary。容器首次啟動會自動下載。
+              <strong>Стандартні томи:</strong> <code>.docker-data/data</code> зберігає акаунти та конфігурацію, <code>.docker-data/opt/windsurf</code> містить бінарник LS. Контейнер автоматично завантажить його при першому запуску.
             </div>
           </div></div>
         </div>
@@ -692,22 +692,22 @@ footer{border-top:1px solid var(--rule);padding:3rem 0 2.5rem;margin-top:2rem}
 <section class="usage-section">
   <div class="container">
     <div class="reveal">
-      <div class="kicker">客戶端接入 · Integrations</div>
-      <h2 class="section-title">你常用的那個 IDE，<em>已經兼容了</em>。</h2>
-      <p class="section-sub">改 BASE_URL，塞 API KEY，完事。</p>
+      <div class="kicker">Підключення клієнтів · Integrations</div>
+      <h2 class="section-title">Ваша улюблена IDE — <em>вже сумісна</em>.</h2>
+      <p class="section-sub">Змініть BASE_URL, додайте API KEY — і готово.</p>
     </div>
 
     <div class="usage-grid reveal">
       <div class="usage-card">
         <h4><span class="logo-chip" style="background:#CC785C">C</span>Claude Code</h4>
-        <p class="endpoint-tag">→ <strong>/v1/messages</strong> · Anthropic 協定</p>
+        <p class="endpoint-tag">→ <strong>/v1/messages</strong> · протокол Anthropic</p>
 <pre><span class="c-key">export</span> ANTHROPIC_BASE_URL=<span class="c-str">"http://YOUR_IP:3003"</span>
 <span class="c-key">export</span> ANTHROPIC_API_KEY=<span class="c-str">"sk-ws-your-key"</span>
 claude</pre>
       </div>
       <div class="usage-card">
         <h4><span class="logo-chip" style="background:#3B82F6">C</span>Cursor</h4>
-        <p class="endpoint-tag">→ <strong>/v1/chat/completions</strong> · OpenAI 協定</p>
+        <p class="endpoint-tag">→ <strong>/v1/chat/completions</strong> · протокол OpenAI</p>
 <pre><span class="c-com"># Settings → Models → Custom OpenAI</span>
 Base URL: <span class="c-str">http://YOUR_IP:3003/v1</span>
 API Key:  <span class="c-str">sk-ws-your-key</span>
@@ -715,7 +715,7 @@ Model:    <span class="c-str">claude-opus-4.6</span></pre>
       </div>
       <div class="usage-card">
         <h4><span class="logo-chip" style="background:#8B6FB0">C</span>Cline / Roo Code</h4>
-        <p class="endpoint-tag">→ <strong>Anthropic</strong> 或 <strong>OpenAI</strong> provider 皆可</p>
+        <p class="endpoint-tag">→ провайдер <strong>Anthropic</strong> або <strong>OpenAI</strong> на вибір</p>
 <pre><span class="c-com"># Provider: OpenAI Compatible</span>
 Base URL: <span class="c-str">http://YOUR_IP:3003/v1</span>
 API Key:  <span class="c-str">sk-ws-your-key</span></pre>
@@ -737,40 +737,40 @@ client = OpenAI(
 <section id="faq">
   <div class="narrow">
     <div class="reveal">
-      <div class="kicker">常見問題 · FAQ</div>
-      <h2 class="section-title">你可能想問的。</h2>
+      <div class="kicker">Поширені запитання · FAQ</div>
+      <h2 class="section-title">Те, про що ви, ймовірно, хочете запитати.</h2>
     </div>
 
     <div class="faq-list reveal">
       <details class="faq-item">
-        <summary>需要 Windsurf 付費帳號嗎？</summary>
-        <div class="a">免費帳號可以跑，但僅限 <code>gemini-2.5-flash</code>（<code>gpt-4o-mini</code> 已下架）。Claude、GPT-5 全系、Gemini 3、GLM 5.x、Kimi K2.x 等都需要 Windsurf Pro 訂閱。後台會自動偵測並標記每個帳號的 tier。</div>
+        <summary>Чи потрібен платний акаунт Windsurf?</summary>
+        <div class="a">Безкоштовний акаунт працює, але обмежений лише <code>gemini-2.5-flash</code> (<code>gpt-4o-mini</code> вже знято з підтримки). Усі моделі Claude, GPT-5, Gemini 3, GLM 5.x, Kimi K2.x та інші потребують підписки Windsurf Pro. Адмінпанель автоматично визначає й позначає tier кожного акаунта.</div>
       </details>
       <details class="faq-item">
-        <summary>可以 Windows 上跑嗎？</summary>
-        <div class="a">HTTP 伺服器和管理後台能跑，但 Language Server binary 只有 Linux 版本（<code>language_server_linux_x64</code>），所以聊天功能僅限 Linux。Windows 建議放 WSL2 或純 Linux VM。</div>
+        <summary>Чи можна запустити на Windows?</summary>
+        <div class="a">HTTP-сервер та адмінпанель працюють, але бінарник Language Server існує лише для Linux (<code>language_server_linux_x64</code>) — тому функція чату доступна лише на Linux. Для Windows рекомендуємо WSL2 або повноцінну Linux VM.</div>
       </details>
       <details class="faq-item">
-        <summary>看不到最新模型（opus-4.7、gpt-5.3 之類）怎麼辦？</summary>
-        <div class="a">Exafunction 公開 release 停在 v2.12.5（2026-01），不含 4.7。從 Windsurf 桌面端 App 裡把 LS binary 拷出來即可：<br>
-        &bull; macOS：<code>~/Library/Application Support/Windsurf/.../language_server_macos_arm</code><br>
-        &bull; Linux：<code>~/.windsurf/bin/language_server_linux_x64</code><br>
-        拷過去後 <code>/v1/models</code> 會自動從雲端 discover 最新目錄。</div>
+        <summary>Що робити, якщо не видно найновіших моделей (opus-4.7, gpt-5.3 тощо)?</summary>
+        <div class="a">Публічний реліз Exafunction зупинився на v2.12.5 (січень 2026) і не містить 4.7. Скопіюйте LS-бінарник з десктопного застосунку Windsurf:<br>
+        &bull; macOS: <code>~/Library/Application Support/Windsurf/.../language_server_macos_arm</code><br>
+        &bull; Linux: <code>~/.windsurf/bin/language_server_linux_x64</code><br>
+        Після копіювання <code>/v1/models</code> автоматично виявить найновіший каталог моделей із хмари.</div>
       </details>
       <details class="faq-item">
-        <summary>帳號會被封嗎？</summary>
-        <div class="a">高頻 burst 確實容易被識別。後台的封禁偵測面板會監控錯誤率，按 5 分鐘窗口做速率冷卻。推薦：每帳號 RPM &lt; 10、配不同出口代理（支援 SOCKS5）、混用思考型和普通模型。</div>
+        <summary>Чи можуть заблокувати акаунт?</summary>
+        <div class="a">Високочастотні burst-запити легко виявляються. Панель виявлення блокувань відстежує рівень помилок і застосовує охолодження у вікнах по 5 хвилин. Рекомендації: тримайте RPM &lt; 10 на акаунт, використовуйте різні вихідні проксі (SOCKS5 підтримується), чергуйте моделі мислення зі звичайними.</div>
       </details>
       <details class="faq-item">
-        <summary>和其他類似專案的區別？</summary>
-        <div class="a">三點核心差異：<br>
-        (1) <strong>雙協定</strong>——同時有 <code>/v1/messages</code> 和 <code>/v1/chat/completions</code>。<br>
-        (2) <strong>planner_mode=NO_TOOL</strong>——關掉 Cascade 內建工具循環，消除路徑洩露。<br>
-        (3) <strong>完整管理後台 + 帳號池</strong>——多號輪詢 + 故障轉移 + Docker 一鍵部署。</div>
+        <summary>Чим цей проєкт відрізняється від аналогів?</summary>
+        <div class="a">Три ключові відмінності:<br>
+        (1) <strong>Подвійний протокол</strong> — одночасно <code>/v1/messages</code> та <code>/v1/chat/completions</code>.<br>
+        (2) <strong>planner_mode=NO_TOOL</strong> — вимикає вбудований tool-цикл Cascade і усуває витік шляхів.<br>
+        (3) <strong>Повноцінна адмінпанель + пул акаунтів</strong> — ротація між кількома акаунтами, автоматичне перемикання у разі збоїв, розгортання у Docker одним кліком.</div>
       </details>
       <details class="faq-item">
-        <summary>MIT License，可以商用嗎？</summary>
-        <div class="a">代碼本體 MIT License，法律上允許商用。README 顶上有一段作者態度：沒給 Star 和 Follow 的請別商業轉售，點了的隨便用。</div>
+        <summary>Ліцензія MIT — чи можна використовувати комерційно?</summary>
+        <div class="a">Сам код під ліцензією MIT, тож юридично комерційне використання дозволене. На початку README автор просить: будь ласка, не перепродавайте комерційно без зірочки та підписки на GitHub — якщо ж ви це зробили, користуйтесь на здоров'я.</div>
       </details>
     </div>
   </div>
@@ -780,9 +780,9 @@ client = OpenAI(
 <section class="contributors-section" id="contributors" style="padding:5rem 0">
   <div class="container">
     <div class="reveal">
-      <div class="kicker">致謝 · Credits</div>
-      <h2 class="section-title">這些朋友把這個專案<em>撐起來</em>了。</h2>
-      <p class="section-sub">每一條 PR 都附上 root-cause 分析；每一個 root-cause 都對應半夜在 Issues 區罵 Claude 的瞬間。權重按貢獻次數與精準度排，不是按代碼行數。</p>
+      <div class="kicker">Подяки · Credits</div>
+      <h2 class="section-title">Ці люди <em>тримають</em> проєкт на плаву.</h2>
+      <p class="section-sub">Кожен PR супроводжується аналізом root-cause; кожен root-cause — це момент, коли хтось о третій ночі лаяв Claude в Issues. Ваги розставлені за кількістю та точністю внесків, а не за кількістю рядків коду.</p>
     </div>
 
     <div class="contrib-grid reveal">
@@ -794,7 +794,7 @@ client = OpenAI(
             <div class="contrib-prs">PR #44 · #51 · #53 · #54</div>
           </div>
         </div>
-        <p class="contrib-summary">四連刀。Opus 4.7 注入守衛繞行重寫、redact 標記血淚迭代到 U+2026 省略號、Pro/Trial tier 被誤降級的 inferTier 補丁、tool preamble 從 1600 字符瘦身到 330。每個 PR 都是 root-cause 直擊。</p>
+        <p class="contrib-summary">Чотири влучні удари. Переписав обхід Opus 4.7 injection-guard, вистраждав ітерацію redact-маркерів до U+2026, виправив помилкове пониження Pro/Trial tier у inferTier, скоротив tool preamble з 1600 до 330 символів. Кожен PR — пряме влучання в root-cause.</p>
       </a>
 
       <a class="contrib-card" href="https://github.com/baily-zhang" target="_blank" rel="noopener">
@@ -805,7 +805,7 @@ client = OpenAI(
             <div class="contrib-prs">PR #36 · #45 · #61</div>
           </div>
         </div>
-        <p class="contrib-summary">cascade reuse / fingerprint / trajectory offset 整套機器的實質 maintainer。從修 0% 命中率，到切斷舊 step 重放，到 Opus 4.7 多模態上下文爆炸，三次都在同一條技術線上深耕到底。</p>
+        <p class="contrib-summary">Основний maintainer усього механізму cascade reuse / fingerprint / trajectory offset. Від виправлення нульового потрапляння в кеш — до усунення повторного виконання старих кроків і вибуху мультимодального контексту Opus 4.7. Три заходи на тій самій технічній лінії, кожен — точно у ціль.</p>
       </a>
 
       <a class="contrib-card" href="https://github.com/youfak" target="_blank" rel="noopener">
@@ -816,7 +816,7 @@ client = OpenAI(
             <div class="contrib-prs">PR #26</div>
           </div>
         </div>
-        <p class="contrib-summary">Docker 零依賴適配一整套：Dockerfile / docker-compose.yml / DATA_DIR 持久化 / CRLF pipefail 修復 / LS 重啟兜底。讓這個項目從「裸跑 pm2」邁進「docker compose up」。</p>
+        <p class="contrib-summary">Повний набір Docker-адаптацій без залежностей: Dockerfile / docker-compose.yml / постійне зберігання DATA_DIR / виправлення CRLF pipefail / резервний перезапуск LS. Перевів проєкт зі «звичайного pm2» на «docker compose up».</p>
       </a>
 
       <a class="contrib-card" href="https://github.com/motto1" target="_blank" rel="noopener">
@@ -827,7 +827,7 @@ client = OpenAI(
             <div class="contrib-prs">PR #20</div>
           </div>
         </div>
-        <p class="contrib-summary">逆向 Windsurf 官網真正使用的 Auth1 登入鏈路 —— 4 步流程還原 + 批量導入 + 剪貼板讀取，補上 Firebase 路徑早已不是主鏈路的缺口。</p>
+        <p class="contrib-summary">Реверс-інжиніринг реального ланцюжка автентифікації Auth1, який використовує сайт Windsurf — відновлення 4-крокового процесу, пакетний імпорт і читання з буфера обміну. Закрив прогалину, що залишилася відколи шлях через Firebase перестав бути основним.</p>
       </a>
 
       <a class="contrib-card" href="https://github.com/smeinecke" target="_blank" rel="noopener">
@@ -838,7 +838,7 @@ client = OpenAI(
             <div class="contrib-prs">PR #43</div>
           </div>
         </div>
-        <p class="contrib-summary">Dashboard 完整 i18n 國際化 —— 14 個 commit 把每處硬編碼中文改成 I18n.t() 調用，再加 check-i18n.js 校驗防漏。從半成品翻譯到真正中英雙語切換。</p>
+        <p class="contrib-summary">Повна інтернаціоналізація Dashboard — 14 комітів замінили кожен жорстко закодований китайський рядок на виклик I18n.t(), плюс check-i18n.js для запобігання прогалинам. Перетворив напівготовий переклад на справжнє двомовне перемикання.</p>
       </a>
 
       <a class="contrib-card" href="https://github.com/abwuge" target="_blank" rel="noopener">
@@ -849,7 +849,7 @@ client = OpenAI(
             <div class="contrib-prs">PR #58</div>
           </div>
         </div>
-        <p class="contrib-summary">首次貢獻就解了部署死鎖。docker-compose 起來後所有容器持續 Restart 的兩個成因（nginx zone 缺失 + config.js join 漏 import），+3 / -2 surgical 全堵上。</p>
+        <p class="contrib-summary">З першим внеском розв'язав deadlock розгортання. Дві причини нескінченного Restart усіх контейнерів після docker-compose (відсутня nginx zone + забутий import у config.js), хірургічно закриті в +3 / -2 рядках.</p>
       </a>
 
       <a class="contrib-card" href="https://github.com/dd373156" target="_blank" rel="noopener">
@@ -860,7 +860,7 @@ client = OpenAI(
             <div class="contrib-prs">PR #1</div>
           </div>
         </div>
-        <p class="contrib-summary">首位外部貢獻者。MODEL_TIER_ACCESS.pro 是模塊載入時的快照，雲端動態合併進來的 claude-opus-4-7-* 永遠進不了 Pro 列表。一行 getter 修。三步 curl 復現寫得教科書級。</p>
+        <p class="contrib-summary">Перший зовнішній учасник. MODEL_TIER_ACCESS.pro був знімком (snapshot), зафіксованим під час завантаження модуля — динамічно злиті з хмари claude-opus-4-7-* ніколи не потрапляли в Pro-список. Виправив одним рядком getter. Відтворення у три curl-запити написане на рівні підручника.</p>
       </a>
 
       <a class="contrib-card" href="https://github.com/colin1112a" target="_blank" rel="noopener">
@@ -871,12 +871,12 @@ client = OpenAI(
             <div class="contrib-prs">PR #13</div>
           </div>
         </div>
-        <p class="contrib-summary">早期代碼審查先行者，一個 PR 涵蓋 15 個安全 / 並發 / 資源管理 bug：XSS 轉義、grpc HTTP/2 池、16MB frame 上限、varint BigInt。雖未直接合並，方向都對，後續多項被獨立重做。</p>
+        <p class="contrib-summary">Першопроходець ранніх рев'ю коду — один PR охопив 15 багів безпеки, конкурентності та керування ресурсами: екранування XSS, пул grpc HTTP/2, ліміт фрейму 16 МБ, varint BigInt. Хоча PR не було злито напряму, напрямки виявилися правильними і пізніше реалізовані окремо.</p>
       </a>
     </div>
 
     <p class="reveal" style="text-align:center;margin-top:2rem;font-size:.85rem;color:var(--muted)">
-      想加入這份名單？到 <a href="https://github.com/dwgx/WindsurfAPI/issues" target="_blank" rel="noopener" style="color:var(--coral-deep)">Issues</a> 提 bug 或到 <a href="https://github.com/dwgx/WindsurfAPI/pulls" target="_blank" rel="noopener" style="color:var(--coral-deep)">Pull requests</a> 直接動手都歡迎。
+      Хочете потрапити до цього списку? Створіть тикет в <a href="https://github.com/dwgx/WindsurfAPI/issues" target="_blank" rel="noopener" style="color:var(--coral-deep)">Issues</a> або одразу беріться за справу в <a href="https://github.com/dwgx/WindsurfAPI/pulls" target="_blank" rel="noopener" style="color:var(--coral-deep)">Pull requests</a> — раді кожному внеску.
     </p>
   </div>
 </section>
@@ -887,10 +887,10 @@ client = OpenAI(
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="logo">Windsurf API</div>
-        <p>Windsurf 反向代理 · 純 Node.js 零依賴 · MIT License · <a href="https://github.com/dwgx" target="_blank" rel="noopener">@dwgx</a></p>
+        <p>Реверс-проксі для Windsurf · Чистий Node.js без залежностей · Ліцензія MIT · <a href="https://github.com/dwgx" target="_blank" rel="noopener">@dwgx</a></p>
       </div>
       <div class="footer-col">
-        <h5>專案</h5>
+        <h5>Проєкт</h5>
         <ul>
           <li><a href="https://github.com/dwgx/WindsurfAPI" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://github.com/dwgx/WindsurfAPI/releases" target="_blank" rel="noopener">Releases</a></li>
@@ -899,16 +899,16 @@ client = OpenAI(
         </ul>
       </div>
       <div class="footer-col">
-        <h5>文檔</h5>
+        <h5>Документація</h5>
         <ul>
-          <li><a href="https://github.com/dwgx/WindsurfAPI/blob/master/README.md" target="_blank" rel="noopener">README (中文)</a></li>
+          <li><a href="https://github.com/dwgx/WindsurfAPI/blob/master/README.ua.md" target="_blank" rel="noopener">README (українською)</a></li>
           <li><a href="https://github.com/dwgx/WindsurfAPI/blob/master/README.en.md" target="_blank" rel="noopener">README (EN)</a></li>
           <li><a href="https://github.com/dwgx/WindsurfAPI/blob/master/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>Contributors: <a href="https://github.com/aict666">@aict666</a> · <a href="https://github.com/baily-zhang">@baily-zhang</a> · <a href="https://github.com/youfak">@youfak</a> · <a href="https://github.com/motto1">@motto1</a> · <a href="https://github.com/smeinecke">@smeinecke</a> · <a href="https://github.com/abwuge">@abwuge</a> · <a href="https://github.com/dd373156">@dd373156</a> · <a href="https://github.com/colin1112a">@colin1112a</a> · <a href="#contributors" style="opacity:.7">完整名單 ↑</a></span>
+      <span>Учасники: <a href="https://github.com/aict666">@aict666</a> · <a href="https://github.com/baily-zhang">@baily-zhang</a> · <a href="https://github.com/youfak">@youfak</a> · <a href="https://github.com/motto1">@motto1</a> · <a href="https://github.com/smeinecke">@smeinecke</a> · <a href="https://github.com/abwuge">@abwuge</a> · <a href="https://github.com/dd373156">@dd373156</a> · <a href="https://github.com/colin1112a">@colin1112a</a> · <a href="#contributors" style="opacity:.7">повний список ↑</a></span>
       <span>&copy; 2026 dwgx</span>
     </div>
   </div>
@@ -1040,8 +1040,8 @@ client = OpenAI(
   const providerShort = {anthropic:'Claude',openai:'GPT',google:'Gemini',xai:'Grok',qwen:'Qwen',moonshot:'Kimi',zhipu:'GLM',minimax:'MiniMax',windsurf:'SWE'};
 
   function badge(m){
-    if(m.free) return '<span class="model-badge free">免費</span>';
-    if(m.thinking) return '<span class="model-badge thinking">思考</span>';
+    if(m.free) return '<span class="model-badge free">Безкоштовно</span>';
+    if(m.thinking) return '<span class="model-badge thinking">Мислення</span>';
     return '';
   }
 
@@ -1094,9 +1094,9 @@ client = OpenAI(
       const pre = btn.closest('.code-box').querySelector('pre');
       try{
         await navigator.clipboard.writeText(pre.innerText);
-        btn.textContent='已複製';btn.classList.add('ok');
-        setTimeout(()=>{btn.textContent='複製';btn.classList.remove('ok')},1400);
-      }catch{btn.textContent='失敗'}
+        btn.textContent='Скопійовано';btn.classList.add('ok');
+        setTimeout(()=>{btn.textContent='Копіювати';btn.classList.remove('ok')},1400);
+      }catch{btn.textContent='Помилка'}
     });
   });
 })();
